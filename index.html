@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geografía Mundial - Mapa Mudo Completo</title>
+  
+  <!-- Icono de bola del mundo para la pestaña -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background-color: #f4f7f6; }
+
+    header {
+      background-color: #1a365d;
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    .title-box h1 { font-size: 1.3rem; }
+
+    .nav-tabs { display: flex; gap: 8px; }
+
+    .tab-btn {
+      background: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: #3182ce;
+      box-shadow: 0 0 5px rgba(255,255,255,0.4);
+    }
+
+    .controls-bar {
+      background: #edf2f7;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid #cbd5e0;
+    }
+
+    .mode-group { display: flex; gap: 6px; }
+
+    .btn-mode {
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: 1px solid #cbd5e0;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+      color: #4a5568;
+      transition: 0.2s;
+    }
+
+    .btn-mode.active-mode {
+      background: #3182ce;
+      color: white;
+      border-color: #2b6cb0;
+    }
+
+    select {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e0;
+      font-size: 0.9rem;
+      background: white;
+      max-width: 250px;
+    }
+
+    #info-panel {
+      background: #fffaf0;
+      border: 1px solid #feebc8;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      color: #744210;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    #target-name {
+      color: #c53030;
+      text-decoration: underline;
+      font-size: 1.05rem;
+    }
+
+    #map { flex: 1; width: 100%; z-index: 1; }
+
+    .custom-popup { font-size: 0.95rem; text-align: center; }
+    .custom-popup b { color: #2c5282; }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      background: #e2e8f0;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-box">
+      <h1>🌍 Geografía Mundial (Mapa Mudo)</h1>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="btn-politico" onclick="switchMap('politico')">Mapa Político</button>
+      <button class="tab-btn" id="btn-fisico" onclick="switchMap('fisico')">Mapa Físico</button>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <div class="mode-group">
+      <button class="btn-mode active-mode" id="mode-estudio" onclick="setMode('estudio')">📚 Modo Estudio</button>
+      <button class="btn-mode" id="mode-practica" onclick="setMode('practica')">🎯 Modo Práctica</button>
+      <button class="btn-mode" id="mode-examen" onclick="setMode('examen')">📝 Modo Examen (30 Preguntas)</button>
+    </div>
+
+    <!-- Desplegable para volar a un elemento específico -->
+    <label>
+      <b>Ir a:</b>
+      <select id="country-select" onchange="goToSelectedItem()">
+        <option value="">-- Seleccionar Elemento --</option>
+      </select>
+    </label>
+
+    <!-- Filtro de Categoría -->
+    <label>
+      <b>Filtrar:</b>
+      <select id="filter-category" onchange="renderMarkers()">
+        <option value="ALL">Mostrar Todo</option>
+      </select>
+    </label>
+
+    <div id="info-panel" style="display: none;">
+      <span id="panel-text">Busca: <strong id="target-name">---</strong></span>
+      <span id="score-text">Puntos: <span id="score">0</span> | Racha: <span id="streak">0</span> 🔥</span>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const db = {
+      politico: [
+        // ÁFRICA
+        { name: "Marruecos", cat: "País (África)", coords: [31.7917, -7.0926] },
+        { name: "Argelia", cat: "País (África)", coords: [28.0339, 1.6596] },
+        { name: "Libia", cat: "País (África)", coords: [26.3351, 17.2283] },
+        { name: "Túnez", cat: "País (África)", coords: [33.8869, 9.5375] },
+        { name: "Egipto", cat: "País (África)", coords: [26.8206, 30.8025] },
+        { name: "Malí", cat: "País (África)", coords: [17.5707, -3.9962] },
+        { name: "Chad", cat: "País (África)", coords: [15.4542, 18.7322] },
+        { name: "Sudán", cat: "País (África)", coords: [12.8628, 30.2176] },
+        { name: "Etiopía", cat: "País (África)", coords: [9.145, 40.4897] },
+        { name: "Senegal", cat: "País (África)", coords: [14.4974, -14.4524] },
+        { name: "Ghana", cat: "País (África)", coords: [7.9465, -1.0232] },
+        { name: "Costa de Marfil", cat: "País (África)", coords: [7.5399, -5.5471] },
+        { name: "Nigeria", cat: "País (África)", coords: [9.082, 8.6753] },
+        { name: "Congo o Zaire", cat: "País (África)", coords: [-4.0383, 21.7587] },
+        { name: "Camerún", cat: "País (África)", coords: [7.3697, 12.3547] },
+        { name: "Kenia", cat: "País (África)", coords: [0.0236, 37.9062] },
+        { name: "Tanzania", cat: "País (África)", coords: [-6.369, 34.8888] },
+        { name: "Angola", cat: "País (África)", coords: [-11.2027, 17.8739] },
+        { name: "Mozambique", cat: "País (África)", coords: [-18.6657, 35.5296] },
+        { name: "Sudáfrica", cat: "País (África)", coords: [-30.5595, 22.9375] },
+        { name: "Madagascar", cat: "País (África)", coords: [-18.7669, 46.8691] },
+
+        // AMÉRICA
+        { name: "Canadá", cat: "País (América)", coords: [56.1304, -106.3468] },
+        { name: "Estados Unidos", cat: "País (América)", coords: [37.0902, -95.7129] },
+        { name: "México", cat: "País (América)", coords: [23.6345, -102.5528] },
+        { name: "Guatemala", cat: "País (América)", coords: [15.7835, -90.2308] },
+        { name: "Cuba", cat: "País (América)", coords: [21.5218, -77.7812] },
+        { name: "Colombia", cat: "País (América)", coords: [4.5709, -74.2973] },
+        { name: "Venezuela", cat: "País (América)", coords: [6.4238, -66.5897] },
+        { name: "Perú", cat: "País (América)", coords: [-9.19, -75.0152] },
+        { name: "Ecuador", cat: "País (América)", coords: [-1.8312, -78.1834] },
+        { name: "Chile", cat: "País (América)", coords: [-35.6751, -71.543] },
+        { name: "Brasil", cat: "País (América)", coords: [-14.235, -51.9253] },
+        { name: "Argentina", cat: "País (América)", coords: [-38.4161, -63.6167] },
+        { name: "Uruguay", cat: "País (América)", coords: [-32.5228, -55.7658] },
+        { name: "Paraguay", cat: "País (América)", coords: [-23.4425, -58.4438] },
+        { name: "Bolivia", cat: "País (América)", coords: [-16.2902, -63.5887] },
+
+        // ASIA
+        { name: "Turquía", cat: "País (Asia)", coords: [38.9637, 35.2433] },
+        { name: "Siria", cat: "País (Asia)", coords: [34.8021, 38.9968] },
+        { name: "Israel", cat: "País (Asia)", coords: [31.0461, 34.8516] },
+        { name: "Irak", cat: "País (Asia)", coords: [33.2232, 43.6793] },
+        { name: "Arabia Saudí", cat: "País (Asia)", coords: [23.8859, 45.0792] },
+        { name: "Emiratos Árabes", cat: "País (Asia)", coords: [23.4241, 53.8478] },
+        { name: "Irán", cat: "País (Asia)", coords: [32.4279, 53.688] },
+        { name: "Pakistán", cat: "País (Asia)", coords: [30.3753, 69.3451] },
+        { name: "India", cat: "País (Asia)", coords: [20.5937, 78.9629] },
+        { name: "Bangladesh", cat: "País (Asia)", coords: [23.685, 90.3563] },
+        { name: "Tailandia", cat: "País (Asia)", coords: [15.87, 100.9925] },
+        { name: "Malasia", cat: "País (Asia)", coords: [4.2105, 101.9758] },
+        { name: "Indonesia", cat: "País (Asia)", coords: [-0.7893, 113.9213] },
+        { name: "Filipinas", cat: "País (Asia)", coords: [12.8797, 121.774] },
+        { name: "China", cat: "País (Asia)", coords: [35.8617, 104.1954] },
+        { name: "Taiwan", cat: "País (Asia)", coords: [23.6978, 120.9605] },
+        { name: "Corea del Sur", cat: "País (Asia)", coords: [35.9078, 127.7669] },
+        { name: "Japón", cat: "País (Asia)", coords: [36.2048, 138.2529] },
+        { name: "Mongolia", cat: "País (Asia)", coords: [46.8625, 103.8467] },
+        { name: "Uzbekistán", cat: "País (Asia)", coords: [41.3775, 64.5853] },
+        { name: "Kazajstán", cat: "País (Asia)", coords: [48.0196, 66.9237] },
+
+        // EUROPA
+        { name: "España", cat: "País (Europa)", coords: [40.4637, -3.7492] },
+        { name: "Portugal", cat: "País (Europa)", coords: [39.3999, -8.2245] },
+        { name: "Italia", cat: "País (Europa)", coords: [41.8719, 12.5674] },
+        { name: "Francia", cat: "País (Europa)", coords: [46.2276, 2.2137] },
+        { name: "Grecia", cat: "País (Europa)", coords: [39.0742, 21.8243] },
+        { name: "Reino Unido", cat: "País (Europa)", coords: [55.3781, -3.436] },
+        { name: "Irlanda", cat: "País (Europa)", coords: [53.4129, -8.2439] },
+        { name: "Países Bajos", cat: "País (Europa)", coords: [52.1326, 5.2913] },
+        { name: "Bélgica", cat: "País (Europa)", coords: [50.5039, 4.4699] },
+        { name: "Alemania", cat: "País (Europa)", coords: [51.1657, 10.4515] },
+        { name: "Suecia", cat: "País (Europa)", coords: [60.1282, 18.6435] },
+        { name: "Noruega", cat: "País (Europa)", coords: [60.472, 8.4689] },
+        { name: "Finlandia", cat: "País (Europa)", coords: [61.9241, 25.7482] },
+        { name: "Dinamarca", cat: "País (Europa)", coords: [56.2639, 9.5018] },
+        { name: "Suiza", cat: "País (Europa)", coords: [46.8182, 8.2275] },
+        { name: "Austria", cat: "País (Europa)", coords: [47.5162, 14.5501] },
+        { name: "Polonia", cat: "País (Europa)", coords: [51.9194, 19.1451] },
+        { name: "Rumania", cat: "País (Europa)", coords: [45.9432, 24.9668] },
+        { name: "Rusia", cat: "País (Europa)", coords: [61.524, 105.3188] },
+        { name: "Ucrania", cat: "País (Europa)", coords: [48.3794, 31.1656] },
+
+        // OCEANÍA
+        { name: "Australia", cat: "País (Oceanía)", coords: [-25.2744, 133.7751] },
+        { name: "Nueva Zelanda", cat: "País (Oceanía)", coords: [-40.9006, 174.886] },
+        { name: "Papúa-Nueva Guinea", cat: "País (Oceanía)", coords: [-6.3149, 143.9555] },
+        { name: "Fidji/Fiji", cat: "País (Oceanía)", coords: [-17.7134, 178.065] },
+
+        // CIUDADES
+        { name: "Toronto", cat: "Ciudad", coords: [43.6532, -79.3832] },
+        { name: "Nueva York", cat: "Ciudad", coords: [40.7128, -74.006] },
+        { name: "Chicago", cat: "Ciudad", coords: [41.8781, -87.6298] },
+        { name: "Los Ángeles", cat: "Ciudad", coords: [34.0522, -118.2437] },
+        { name: "San Francisco", cat: "Ciudad", coords: [37.7749, -122.4194] },
+        { name: "Ciudad de México", cat: "Ciudad", coords: [19.4326, -99.1332] },
+        { name: "Bogotá", cat: "Ciudad", coords: [4.711, -74.0721] },
+        { name: "Lima", cat: "Ciudad", coords: [-12.0464, -77.0428] },
+        { name: "Santiago de Chile", cat: "Ciudad", coords: [-33.4489, -70.6693] },
+        { name: "Buenos Aires", cat: "Ciudad", coords: [-34.6037, -58.3816] },
+        { name: "Sao Paulo", cat: "Ciudad", coords: [-23.5505, -46.6333] },
+        { name: "Río de Janeiro", cat: "Ciudad", coords: [-22.9068, -43.1729] },
+        { name: "El Cairo", cat: "Ciudad", coords: [30.0444, 31.2357] },
+        { name: "Casablanca", cat: "Ciudad", coords: [33.5731, -7.5898] },
+        { name: "Lagos", cat: "Ciudad", coords: [6.5244, 3.3792] },
+        { name: "Kinshasa", cat: "Ciudad", coords: [-4.4419, 15.2663] },
+        { name: "Johannesburg", cat: "Ciudad", coords: [-26.2041, 28.0473] },
+        { name: "Estambul", cat: "Ciudad", coords: [41.0082, 28.9784] },
+        { name: "Teherán", cat: "Ciudad", coords: [35.6892, 51.389] },
+        { name: "Karachi", cat: "Ciudad", coords: [24.8607, 67.0011] },
+        { name: "Bombay", cat: "Ciudad", coords: [19.076, 72.8777] },
+        { name: "Calcuta", cat: "Ciudad", coords: [22.5726, 88.3639] },
+        { name: "Yakarta", cat: "Ciudad", coords: [-6.2088, 106.8456] },
+        { name: "Bangkok", cat: "Ciudad", coords: [13.7563, 100.5018] },
+        { name: "Singapour", cat: "Ciudad", coords: [1.3521, 103.8198] },
+        { name: "Seul", cat: "Ciudad", coords: [37.5665, 126.978] },
+        { name: "Shanghai", cat: "Ciudad", coords: [31.2304, 121.4737] },
+        { name: "Hong Kong", cat: "Ciudad", coords: [22.3193, 114.1694] },
+        { name: "Pekin o Beijing", cat: "Ciudad", coords: [39.9042, 116.4074] },
+        { name: "Tokyo", cat: "Ciudad", coords: [35.6762, 139.6503] },
+        { name: "Sidney", cat: "Ciudad", coords: [-33.8688, 151.2093] },
+        { name: "Madrid", cat: "Ciudad", coords: [40.4168, -3.7038] },
+        { name: "París", cat: "Ciudad", coords: [48.8566, 2.3522] },
+        { name: "Londres", cat: "Ciudad", coords: [51.5074, -0.1278] },
+        { name: "Berlín", cat: "Ciudad", coords: [52.52, 13.405] },
+        { name: "Moscú", cat: "Ciudad", coords: [55.7558, 37.6173] },
+        { name: "San Petersburgo", cat: "Ciudad", coords: [59.9311, 30.3609] },
+        { name: "Roma", cat: "Ciudad", coords: [41.9028, 12.4964] },
+        { name: "Atenas", cat: "Ciudad", coords: [37.9838, 23.7275] }
+      ],
+
+      fisico: [
+        // CORDILLERAS Y PICOS
+        { name: "Cordillera de los Alpes", cat: "Cordillera", coords: [46.8876, 9.657] },
+        { name: "Montes Escandinavos", cat: "Cordillera", coords: [62.0, 9.0] },
+        { name: "Cordillera del Cáucaso", cat: "Cordillera", coords: [42.6, 44.0] },
+        { name: "Montes Urales", cat: "Cordillera", coords: [60.0, 60.0] },
+        { name: "Cordillera del Himalaya", cat: "Cordillera", coords: [28.0, 84.0] },
+        { name: "Cordillera Divisoria", cat: "Cordillera", coords: [-25.0, 147.0] },
+        { name: "Cordillera de los Andes", cat: "Cordillera", coords: [-21.0, -69.0] },
+        { name: "Montañas Rocosas", cat: "Cordillera", coords: [44.0, -110.0] },
+        { name: "Sierra Madre", cat: "Cordillera", coords: [23.0, -102.0] },
+        { name: "Montes Apalaches", cat: "Cordillera", coords: [37.0, -80.0] },
+        { name: "Cordillera del Atlas", cat: "Cordillera", coords: [31.0, -7.0] },
+        { name: "Everest", cat: "Pico", coords: [27.9881, 86.925] },
+        { name: "Mont Blanc", cat: "Pico", coords: [45.8326, 6.8652] },
+        { name: "Elbrus", cat: "Pico", coords: [43.3499, 42.4453] },
+        { name: "Kilimanjaro", cat: "Pico", coords: [-3.0674, 37.3556] },
+        { name: "Aconcagua", cat: "Pico", coords: [-32.6532, -70.0109] },
+        { name: "Mont McKinley (Denali)", cat: "Pico", coords: [63.0692, -151.007] },
+
+        // MESETAS, LLANURAS Y DESIERTOS
+        { name: "Meseta del Irán", cat: "Meseta / Macizo", coords: [32.0, 53.0] },
+        { name: "Meseta de Siberia Central", cat: "Meseta / Macizo", coords: [65.0, 100.0] },
+        { name: "Meseta del Tibet", cat: "Meseta / Macizo", coords: [33.0, 88.0] },
+        { name: "Macizo o Meseta Etiópico", cat: "Meseta / Macizo", coords: [9.0, 39.0] },
+        { name: "Meseta del Mato Grosso", cat: "Meseta / Macizo", coords: [-14.0, -56.0] },
+        { name: "Escudo Canadiense", cat: "Meseta / Macizo", coords: [52.0, -75.0] },
+        { name: "Gran Llanura Europea", cat: "Llanura / Desierto", coords: [52.0, 20.0] },
+        { name: "Llanura Rusa (Europa Oriental)", cat: "Llanura / Desierto", coords: [55.0, 40.0] },
+        { name: "Llanura de Siberia Occ.", cat: "Llanura / Desierto", coords: [61.0, 75.0] },
+        { name: "Desierto Arábigo", cat: "Llanura / Desierto", coords: [23.0, 46.0] },
+        { name: "Desierto de Gobi", cat: "Llanura / Desierto", coords: [42.5, 103.5] },
+        { name: "Gran Desierto Victoria", cat: "Llanura / Desierto", coords: [-29.1, 129.2] },
+        { name: "Desierto del Sahara", cat: "Llanura / Desierto", coords: [23.4162, 25.6628] },
+        { name: "Desierto del Kalahari", cat: "Llanura / Desierto", coords: [-23.0, 22.0] },
+        { name: "Desierto de Atacama", cat: "Llanura / Desierto", coords: [-23.8634, -69.1328] },
+        { name: "Cuenca del Congo", cat: "Llanura / Desierto", coords: [-1.0, 22.0] },
+        { name: "Llanura de la Pampa", cat: "Llanura / Desierto", coords: [-35.0, -62.0] },
+        { name: "Llanura de la Patagonia", cat: "Llanura / Desierto", coords: [-45.0, -69.0] },
+        { name: "Llanura Amazónica", cat: "Llanura / Desierto", coords: [-3.0, -60.0] },
+
+        // PENÍNSULAS E ISLAS
+        { name: "Península Ibérica", cat: "Península", coords: [40.0, -4.0] },
+        { name: "Península Escandinava", cat: "Península", coords: [63.0, 15.0] },
+        { name: "Península Balcánica", cat: "Península", coords: [42.0, 22.0] },
+        { name: "Península Arábiga", cat: "Península", coords: [23.0, 46.0] },
+        { name: "Península del Indostán", cat: "Península", coords: [20.0, 78.0] },
+        { name: "Península de Indochina", cat: "Península", coords: [16.0, 101.0] },
+        { name: "Península de Corea", cat: "Península", coords: [37.5, 127.0] },
+        { name: "Península de Somalia", cat: "Península", coords: [5.0, 46.0] },
+        { name: "Península de Labrador", cat: "Península", coords: [54.0, -64.0] },
+        { name: "Gran Bretaña", cat: "Isla / Archipiélago", coords: [54.0, -2.0] },
+        { name: "Islandia", cat: "Isla / Archipiélago", coords: [64.9631, -19.0208] },
+        { name: "Archipiélago del Japón", cat: "Isla / Archipiélago", coords: [36.0, 138.0] },
+        { name: "Archipiélago de Filipinas", cat: "Isla / Archipiélago", coords: [13.0, 122.0] },
+        { name: "Borneo", cat: "Isla / Archipiélago", coords: [1.0, 114.0] },
+        { name: "Sumatra", cat: "Isla / Archipiélago", coords: [0.0, 102.0] },
+        { name: "Java", cat: "Isla / Archipiélago", coords: [-7.5, 110.0] },
+        { name: "Nueva Zelanda", cat: "Isla / Archipiélago", coords: [-41.0, 174.0] },
+        { name: "Nueva Guinea", cat: "Isla / Archipiélago", coords: [-5.0, 140.0] },
+        { name: "Madagascar", cat: "Isla / Archipiélago", coords: [-19.0, 47.0] },
+        { name: "Cuba", cat: "Isla / Archipiélago", coords: [21.8, -79.0] },
+        { name: "Groenlandia", cat: "Isla / Archipiélago", coords: [72.0, -40.0] },
+        { name: "Islas Antillas", cat: "Isla / Archipiélago", coords: [18.0, -68.0] },
+
+        // CABOS, ESTRECHOS, GOLFOS Y OCÉANOS
+        { name: "Cabo de Buena Esperanza", cat: "Cabo / Estrecho / Golfo", coords: [-34.3568, 18.474] },
+        { name: "Cabo de Hornos", cat: "Cabo / Estrecho / Golfo", coords: [-55.98, -67.27] },
+        { name: "Estrecho de Gibraltar", cat: "Cabo / Estrecho / Golfo", coords: [35.96, -5.6] },
+        { name: "Estrecho de Bering", cat: "Cabo / Estrecho / Golfo", coords: [65.8, -168.9] },
+        { name: "Canal de Panamá", cat: "Cabo / Estrecho / Golfo", coords: [9.08, -79.68] },
+        { name: "Canal de Suez", cat: "Cabo / Estrecho / Golfo", coords: [30.5856, 32.3394] },
+        { name: "Golfo Pérsico", cat: "Cabo / Estrecho / Golfo", coords: [26.0, 52.0] },
+        { name: "Golfo de Bengala", cat: "Cabo / Estrecho / Golfo", coords: [15.0, 88.0] },
+        { name: "Golfo de Guinea", cat: "Cabo / Estrecho / Golfo", coords: [1.0, 2.0] },
+        { name: "Golfo de México", cat: "Cabo / Estrecho / Golfo", coords: [25.0, -90.0] },
+        { name: "Océano Atlántico", cat: "Océano", coords: [0.0, -30.0] },
+        { name: "Océano Pacífico", cat: "Océano", coords: [0.0, -160.0] },
+        { name: "Océano Índico", cat: "Océano", coords: [-20.0, 80.0] },
+        { name: "Glacial Ártico", cat: "Océano", coords: [85.0, 0.0] },
+        { name: "Glacial Antártico", cat: "Océano", coords: [-70.0, 0.0] },
+
+        // MARES, RÍOS Y LAGOS
+        { name: "Mar del Coral", cat: "Mar", coords: [-18.0, 155.0] },
+        { name: "Mar Arábigo", cat: "Mar", coords: [15.0, 65.0] },
+        { name: "Mar de la China Meridional", cat: "Mar", coords: [12.0, 113.0] },
+        { name: "Mar Caribe o de las Antillas", cat: "Mar", coords: [15.0, -75.0] },
+        { name: "Mar Mediterráneo", cat: "Mar", coords: [35.0, 18.0] },
+        { name: "Mar de Noruega", cat: "Mar", coords: [68.0, 5.0] },
+        { name: "Mar del Japón", cat: "Mar", coords: [40.0, 135.0] },
+        { name: "Mar del Norte", cat: "Mar", coords: [56.0, 3.0] },
+        { name: "Mar Negro", cat: "Mar", coords: [43.0, 34.0] },
+        { name: "Mar Rojo", cat: "Mar", coords: [20.0, 38.0] },
+        { name: "Amazonas", cat: "Río", coords: [-3.4653, -62.2159] },
+        { name: "Mississippi-Missouri", cat: "Río", coords: [37.0, -89.0] },
+        { name: "Paraná", cat: "Río", coords: [-27.0, -58.0] },
+        { name: "Orinoco", cat: "Río", coords: [7.0, -65.0] },
+        { name: "Yang-Tseu-Kiang (Azul)", cat: "Río", coords: [30.5, 114.0] },
+        { name: "Yenisei", cat: "Río", coords: [60.0, 90.0] },
+        { name: "Obi", cat: "Río", coords: [61.0, 69.0] },
+        { name: "Indo", cat: "Río", coords: [27.0, 68.0] },
+        { name: "Hoang-he o Amarillo", cat: "Río", coords: [36.0, 110.0] },
+        { name: "Lena", cat: "Río", coords: [62.0, 129.0] },
+        { name: "Mekong", cat: "Río", coords: [16.0, 105.0] },
+        { name: "Ganges", cat: "Río", coords: [25.0, 85.0] },
+        { name: "Níger", cat: "Río", coords: [13.0, 2.0] },
+        { name: "Nilo", cat: "Río", coords: [18.0, 33.0] },
+        { name: "Congo", cat: "Río", coords: [-2.0, 22.0] },
+        { name: "Zambeze", cat: "Río", coords: [-15.0, 28.0] },
+        { name: "Murray", cat: "Río", coords: [-35.0, 143.0] },
+        { name: "Volga", cat: "Río", coords: [53.0, 48.0] },
+        { name: "Danubio", cat: "Río", coords: [45.0, 20.0] },
+        { name: "Mar Caspio", cat: "Lago", coords: [41.9383, 50.6669] },
+        { name: "Superior", cat: "Lago", coords: [47.7, -87.5] },
+        { name: "Victoria", cat: "Lago", coords: [-1.0, 33.0] },
+        { name: "Hurón", cat: "Lago", coords: [44.8, -82.4] },
+        { name: "Míchigan", cat: "Lago", coords: [44.0, -87.0] },
+        { name: "Tanganika", cat: "Lago", coords: [-6.0, 29.5] },
+        { name: "Baikal", cat: "Lago", coords: [53.5, 108.0] },
+        { name: "Mar de Aral", cat: "Lago", coords: [45.0, 59.0] }
+      ]
+    };
+
+    let currentMapType = 'politico';
+    let currentMode = 'estudio';
+    let markersGroup = [];
+    let targetItem = null;
+
+    let practiceScore = 0;
+    let practiceStreak = 0;
+
+    let examQuestions = [];
+    let examIndex = 0;
+    let examHits = 0;
+
+    // Inicializar Mapa
+    const map = L.map('map', {
+      center: [20, 0],
+      zoom: 2,
+      minZoom: 2,
+      maxZoom: 9
+    });
+
+    // MAPA ESRI 100% GRATUITO - SIN NOMBRES Y SIN API KEY
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri',
+      maxZoom: 16
+    }).addTo(map);
+
+    function switchMap(type) {
+      currentMapType = type;
+      document.getElementById('btn-politico').classList.toggle('active', type === 'politico');
+      document.getElementById('btn-fisico').classList.toggle('active', type === 'fisico');
+      
+      populateCountrySelect();
+      populateCategoryFilter();
+      setMode(currentMode);
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+
+      document.getElementById('mode-estudio').classList.toggle('active-mode', mode === 'estudio');
+      document.getElementById('mode-practica').classList.toggle('active-mode', mode === 'practica');
+      document.getElementById('mode-examen').classList.toggle('active-mode', mode === 'examen');
+
+      const infoPanel = document.getElementById('info-panel');
+      const scoreText = document.getElementById('score-text');
+
+      if (mode === 'estudio') {
+        infoPanel.style.display = 'none';
+        renderMarkers();
+      } else if (mode === 'practica') {
+        infoPanel.style.display = 'flex';
+        scoreText.style.display = 'inline';
+        practiceScore = 0;
+        practiceStreak = 0;
+        updatePracticeScoreboard();
+        nextPracticeQuestion();
+      } else if (mode === 'examen') {
+        infoPanel.style.display = 'flex';
+        scoreText.style.display = 'none';
+        startExam();
+      }
+    }
+
+    function populateCountrySelect() {
+      const select = document.getElementById('country-select');
+      select.innerHTML = '<option value="">-- Seleccionar Elemento --</option>';
+      
+      const sortedItems = [...db[currentMapType]].sort((a, b) => a.name.localeCompare(b.name));
+      sortedItems.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.name;
+        opt.innerText = `${item.name} (${item.cat})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function goToSelectedItem() {
+      const selectedName = document.getElementById('country-select').value;
+      if (!selectedName) return;
+
+      const item = db[currentMapType].find(i => i.name === selectedName);
+      if (item) {
+        map.setView(item.coords, 5);
+      }
+    }
+
+    function populateCategoryFilter() {
+      const select = document.getElementById('filter-category');
+      select.innerHTML = '<option value="ALL">Mostrar Todo</option>';
+      
+      const categories = [...new Set(db[currentMapType].map(item => item.cat))];
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.innerText = cat;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderMarkers() {
+      markersGroup.forEach(m => map.removeLayer(m));
+      markersGroup = [];
+
+      const filterCat = document.getElementById('filter-category').value;
+      const itemsToRender = db[currentMapType].filter(item => filterCat === 'ALL' || item.cat === filterCat);
+
+      itemsToRender.forEach(item => {
+        let color = '#3182ce';
+        if (currentMapType === 'politico') {
+          color = item.cat.includes('Ciudad') ? '#e53e3e' : '#2b6cb0';
+        } else {
+          if (['Río', 'Lago', 'Mar', 'Océano'].includes(item.cat)) color = '#3182ce';
+          else if (['Pico', 'Cordillera'].includes(item.cat)) color = '#dd6b20';
+          else color = '#38a169';
+        }
+
+        const circle = L.circleMarker(item.coords, {
+          radius: item.cat.includes('Ciudad') || item.cat === 'Pico' ? 6 : 9,
+          fillColor: color,
+          color: '#ffffff',
+          weight: 1.5,
+          opacity: 1,
+          fillOpacity: 0.85
+        }).addTo(map);
+
+        if (currentMode === 'estudio') {
+          circle.bindPopup(`
+            <div class="custom-popup">
+              <b>${item.name}</b><br>
+              <span class="badge">${item.cat}</span>
+            </div>
+          `);
+        } else {
+          circle.on('click', () => handleQuizAnswer(item));
+        }
+
+        markersGroup.push(circle);
+      });
+    }
+
+    function updatePracticeScoreboard() {
+      document.getElementById('score').innerText = practiceScore;
+      document.getElementById('streak').innerText = practiceStreak;
+    }
+
+    function nextPracticeQuestion() {
+      const activeList = db[currentMapType];
+      targetItem = activeList[Math.floor(Math.random() * activeList.length)];
+      document.getElementById('panel-text').innerHTML = `Busca: <strong id="target-name">${targetItem.name}</strong> (${targetItem.cat})`;
+      renderMarkers();
+    }
+
+    function startExam() {
+      const activeList = [...db[currentMapType]];
+      const shuffled = activeList.sort(() => 0.5 - Math.random());
+      examQuestions = shuffled.slice(0, Math.min(30, shuffled.length));
+      examIndex = 0;
+      examHits = 0;
+      nextExamQuestion();
+    }
+
+    function nextExamQuestion() {
+      if (examIndex >= examQuestions.length) {
+        finishExam();
+        return;
+      }
+      targetItem = examQuestions[examIndex];
+      document.getElementById('panel-text').innerHTML = `Pregunta ${examIndex + 1} de ${examQuestions.length}: Ubica <strong id="target-name">${targetItem.name}</strong>`;
+      renderMarkers();
+    }
+
+    function finishExam() {
+      const total = examQuestions.length;
+      const mark = ((examHits / total) * 10).toFixed(1);
+      
+      let message = `📝 EXAMEN FINALIZADO\n\n`;
+      message += `- Preguntas respondidas: ${total}\n`;
+      message += `- Aciertos totales: ${examHits}\n`;
+      message += `- NOTA FINAL: ${mark} / 10\n\n`;
+
+      if (mark >= 9) message += "🏆 ¡Excelente resultado!";
+      else if (mark >= 7) message += "👍 ¡Muy bien!";
+      else if (mark >= 5) message += "🙂 Aprobado.";
+      else message += "⚠️ Debes repasar un poco más.";
+
+      alert(message);
+      setMode('estudio');
+    }
+
+    function handleQuizAnswer(clickedItem) {
+      if (currentMode === 'practica') {
+        if (clickedItem.name === targetItem.name) {
+          practiceScore += 10;
+          practiceStreak += 1;
+          alert(`¡CORRECTO! 🎯 Has localizado ${clickedItem.name}`);
+          updatePracticeScoreboard();
+          nextPracticeQuestion();
+        } else {
+          practiceStreak = 0;
+          updatePracticeScoreboard();
+          alert(`❌ Incorrecto.\n\nHas pulsado en: ${clickedItem.name}\nBuscabas: ${targetItem.name}`);
+        }
+      } else if (currentMode === 'examen') {
+        if (clickedItem.name === targetItem.name) {
+          examHits++;
+        }
+        examIndex++;
+        nextExamQuestion();
+      }
+    }
+
+    // Inicialización
+    populateCountrySelect();
+    populateCategoryFilter();
+    setMode('estudio');
+  </script>
+</body>
+</html>
