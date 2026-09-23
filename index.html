@@ -34,7 +34,10 @@
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
   </style>
 </head>
-<body class="h-full flex flex-col overflow-hidden bg-slate-900 text-slate-100">
+<body class="h-full flex flex-col overflow-hidden bg-slate-900 text-slate-100 relative">
+
+  <!-- Toast Notification (Reemplaza los alert) -->
+  <div id="toastNotification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-none"></div>
 
   <!-- Top Navigation Bar -->
   <header class="bg-slate-800/90 border-b border-slate-700/80 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 z-20 backdrop-blur-md shadow-md">
@@ -512,6 +515,21 @@
         'fa-solid fa-volume-high text-xs text-slate-300';
     }
 
+    function showToast(message, type) {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      toast.innerText = message;
+      if (type === 'correct') {
+        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white border border-emerald-400 shadow-emerald-900/50";
+      } else {
+        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-rose-600 text-white border border-rose-400 shadow-rose-900/50";
+      }
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2200);
+    }
+
     function initMap() {
       map = L.map('map', { zoomControl: true }).setView(DATASETS[currentDatasetKey].center, DATASETS[currentDatasetKey].zoom);
       
@@ -637,7 +655,7 @@
         document.getElementById('practiceCategoryBadge').innerText = currentQuestionItem.cat;
       } else if (currentMode === 'class') {
         if (quizIndex >= quizQuestions.length) {
-          alert(`🏫 CLASE COMPLETADA\n\nAciertos: ${quizHits} de 5\nNota: ${((quizHits/5)*10).toFixed(1)} / 10`);
+          showToast(`🏫 CLASE COMPLETADA - Aciertos: ${quizHits}/5 (Nota: ${((quizHits/5)*10).toFixed(1)})`, 'correct');
           switchMode('study');
           return;
         }
@@ -648,7 +666,7 @@
       } else if (currentMode === 'exam') {
         if (quizIndex >= quizQuestions.length) {
           const total = quizQuestions.length;
-          alert(`📝 EXAMEN COMPLETADO\n\nAciertos: ${quizHits} de ${total}\nNota Final: ${((quizHits/total)*10).toFixed(1)} / 10`);
+          showToast(`📝 EXAMEN COMPLETADO - Aciertos: ${quizHits}/${total} (Nota: ${((quizHits/total)*10).toFixed(1)})`, 'correct');
           switchMode('study');
           return;
         }
@@ -670,13 +688,13 @@
         marker.on('click', () => {
           if (item.name === currentQuestionItem.name) {
             playAudio('correct');
-            if (currentMode === 'practica') {
+            if (currentMode === 'practice') {
               practiceScore += 10;
               document.getElementById('practiceScore').innerText = practiceScore;
-              alert(`¡CORRECTO! 🎯 Has localizado ${item.name}`);
+              showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
             } else if (currentMode === 'class') {
               quizHits++;
-              alert(`¡CORRECTO! 🎯 Has localizado ${item.name}`);
+              showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
               quizIndex++;
             } else if (currentMode === 'exam') {
               quizHits++;
@@ -684,10 +702,10 @@
             }
           } else {
             playAudio('wrong');
-            if (currentMode === 'practica') {
-              alert(`❌ Incorrecto.\n\nPulsaste en: ${item.name}\nBuscabas: ${currentQuestionItem.name}`);
+            if (currentMode === 'practice') {
+              showToast(`❌ Incorrecto. Pulsaste en ${item.name} (Buscabas: ${currentQuestionItem.name})`, 'wrong');
             } else if (currentMode === 'class') {
-              alert(`❌ INCORRECTO.\n\nPulsaste en: ${item.name}\nBuscabas: ${currentQuestionItem.name}`);
+              showToast(`❌ Incorrecto. Buscabas: ${currentQuestionItem.name}`, 'wrong');
               quizIndex++;
             } else if (currentMode === 'exam') {
               quizIndex++;
