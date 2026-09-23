@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Examen Geografía</title>
+  <title>Examen Geografía - Tier List Global</title>
   
   <!-- Icono de bola del mundo para la pestaña -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
@@ -32,11 +32,67 @@
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Modales y Tier List */
+    .modal {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+    .tier-container {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    .tier-row {
+        display: flex;
+        margin: 8px 0;
+        border-radius: 8px;
+        overflow: hidden;
+        min-height: 55px;
+        border: 1px solid #334155;
+    }
+    .tier-label {
+        width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.4rem;
+        color: #000;
+    }
+    .tier-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px;
+        align-items: center;
+        flex-grow: 1;
+        background: #0f172a;
+    }
+    .tier-s .tier-label { background: #ff7f7f; }
+    .tier-a .tier-label { background: #ffbf7f; }
+    .tier-b .tier-label { background: #ffdf7f; }
+    .tier-c .tier-label { background: #ffff7f; }
+    .tier-d .tier-label { background: #7fff7f; }
+
+    .tier-item-card {
+        background: #1e293b;
+        color: #f8fafc;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        border: 1px solid #475569;
+    }
   </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden bg-slate-900 text-slate-100 relative">
 
-  <!-- Toast Notification (Reemplaza los alert) -->
+  <!-- Toast Notification -->
   <div id="toastNotification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-none"></div>
 
   <!-- Top Navigation Bar -->
@@ -55,7 +111,7 @@
 
     <!-- Map & Mode Controls -->
     <div class="flex flex-wrap items-center gap-2">
-      <!-- Selector de Mapa (Solo Físico y Político) -->
+      <!-- Selector de Mapa -->
       <div class="relative">
         <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-inner">
           <option value="world_phys">Mapamundi Físico</option>
@@ -79,8 +135,14 @@
         </button>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- Tier List & Sound Buttons -->
       <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-2">
+        <button onclick="openSaveModal()" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
+          <i class="fa-solid fa-floppy-disk"></i> <span class="hidden lg:inline">Guardar</span>
+        </button>
+        <button onclick="renderTierList()" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow" title="Ver Tier List Global">
+          <i class="fa-solid fa-trophy"></i> <span class="hidden lg:inline">Tier List</span>
+        </button>
         <button id="muteBtn" onclick="toggleMute()" class="p-2 rounded-lg bg-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Sonido">
           <i id="muteIcon" class="fa-solid fa-volume-high text-xs"></i>
         </button>
@@ -94,7 +156,7 @@
     <!-- Sidebar Controls Panel -->
     <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-slate-800/95 border-r border-slate-700/80 flex flex-col z-10 shrink-0 max-h-[45vh] md:max-h-none overflow-y-auto shadow-xl">
       
-      <!-- MODE 1: ESTUDIO (Incluye búsqueda y lista) -->
+      <!-- MODE 1: ESTUDIO -->
       <div id="panelStudy" class="p-4 flex flex-col gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
           <div class="flex items-center justify-between mb-2">
@@ -104,7 +166,7 @@
             <span id="studyTotalBadge" class="text-[11px] font-semibold bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full border border-sky-500/20">0 Elementos</span>
           </div>
           <p class="text-xs text-slate-300 leading-relaxed">
-            Explora libremente el mapa. Usa los filtros o busca cualquier accidente geográfico para ubicarlo exactamente en el mapa.
+            Explora libremente el mapa. Usa los filtros o busca cualquier accidente geográfico para ubicarlo exactamente.
           </p>
         </div>
 
@@ -123,18 +185,17 @@
           </select>
         </div>
 
-        <div class="flex-1 min-h-[160px] max-h-[300px] md:max-h-[calc(100vh-340px)] overflow-y-auto space-y-1.5 pr-1" id="studyItemsList">
-        </div>
+        <div class="flex-1 min-h-[160px] max-h-[300px] md:max-h-[calc(100vh-340px)] overflow-y-auto space-y-1.5 pr-1" id="studyItemsList"></div>
       </div>
 
-      <!-- MODE 2: PRÁCTICA (Muestra pregunta ¿DÓNDE SE ENCUENTRA?) -->
+      <!-- MODE 2: PRÁCTICA -->
       <div id="panelPractice" class="p-4 hidden flex-col gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center">
           <div>
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
               <i class="fa-solid fa-bullseye"></i> Modo Práctica
             </span>
-            <p class="text-xs text-slate-400 mt-0.5">Preguntas infinitas</p>
+            <p class="text-xs text-slate-400 mt-0.5">+10 acierto / -10 fallo</p>
           </div>
           <div class="text-right">
             <div class="text-xs font-bold text-emerald-400 flex items-center justify-end gap-1">
@@ -153,7 +214,7 @@
         </div>
       </div>
 
-      <!-- MODE 3: CLASE (5 Preguntas) -->
+      <!-- MODE 3: CLASE -->
       <div id="panelClass" class="p-4 hidden flex-col gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
           <div>
@@ -174,7 +235,7 @@
         </div>
       </div>
 
-      <!-- MODE 4: EXAMEN (30 Preguntas) -->
+      <!-- MODE 4: EXAMEN -->
       <div id="panelExam" class="p-4 hidden flex-col gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
           <div>
@@ -207,8 +268,59 @@
     </main>
   </div>
 
+  <!-- Modal Guardar Puntuación -->
+  <div id="saveScoreModal" class="modal">
+    <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
+      <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
+      <p class="text-xs text-slate-300 mb-4">Puntuación actual de práctica: <span id="finalScoreDisplay" class="font-bold text-white">0</span> pts</p>
+      <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
+      <div class="flex gap-2">
+        <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
+        <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ver Tier List Global -->
+  <div id="tierListModal" class="modal">
+    <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-11/12 max-w-2xl shadow-2xl tier-container">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-extrabold text-indigo-400 flex items-center gap-2">
+          <i class="fa-solid fa-trophy"></i> Tabla de Clasificación Global
+        </h2>
+        <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas).</p>
+      
+      <div class="tier-row tier-s">
+        <span class="tier-label">S</span>
+        <div id="tierS" class="tier-items"></div>
+      </div>
+      <div class="tier-row tier-a">
+        <span class="tier-label">A</span>
+        <div id="tierA" class="tier-items"></div>
+      </div>
+      <div class="tier-row tier-b">
+        <span class="tier-label">B</span>
+        <div id="tierB" class="tier-items"></div>
+      </div>
+      <div class="tier-row tier-c">
+        <span class="tier-label">C</span>
+        <div id="tierC" class="tier-items"></div>
+      </div>
+      <div class="tier-row tier-d">
+        <span class="tier-label">D</span>
+        <div id="tierD" class="tier-items"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // BASE DE DATOS COMPLETA SEGÚN TU TEMARIO
+    // URL DE TU GOOGLE APPS SCRIPT
+    // URL DE TU GOOGLE APPS SCRIPT
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySFXzhqQPG0pJaxF_gE6ru1keFyjS9_vPce_KkY2YzFt1VZ8nH5F_vdA2MgT4cWfkpPg/exec";
+
+    // BASE DE DATOS COMPLETA DE GEOGRAFÍA
     const DATASETS = {
       world_phys: {
         title: "Mapamundi Físico",
@@ -703,7 +815,9 @@
           } else {
             playAudio('wrong');
             if (currentMode === 'practice') {
-              showToast(`❌ Incorrecto. Pulsaste en ${item.name} (Buscabas: ${currentQuestionItem.name})`, 'wrong');
+              practiceScore -= 10;
+              document.getElementById('practiceScore').innerText = practiceScore;
+              showToast(`❌ Incorrecto (-10 pts). Pulsaste en ${item.name} (Buscabas: ${currentQuestionItem.name})`, 'wrong');
             } else if (currentMode === 'class') {
               showToast(`❌ Incorrecto. Buscabas: ${currentQuestionItem.name}`, 'wrong');
               quizIndex++;
@@ -714,6 +828,94 @@
           nextQuestion();
         });
       });
+    }
+
+    // --- LÓGICA DE MODALES Y TIER LIST GLOBAL ---
+
+    function getTierByScore(score) {
+      if (score >= 300) return 'tierS';
+      if (score >= 200) return 'tierA';
+      if (score >= 100) return 'tierB';
+      if (score >= 30) return 'tierC';
+      return 'tierD';
+    }
+
+    function openSaveModal() {
+      document.getElementById('finalScoreDisplay').innerText = practiceScore;
+      document.getElementById('saveScoreModal').style.display = 'flex';
+    }
+
+    function closeModals() {
+      document.getElementById('saveScoreModal').style.display = 'none';
+      document.getElementById('tierListModal').style.display = 'none';
+    }
+
+    async function submitScoreToCloud() {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) {
+        alert('Por favor, introduce tu nombre.');
+        return;
+      }
+
+      const assignedTier = getTierByScore(practiceScore);
+      const payload = { name: name, score: practiceScore, tier: assignedTier };
+
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = "Subiendo...";
+      btn.disabled = true;
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        alert('¡Guardado en la Tier List global con éxito!');
+        closeModals();
+        document.getElementById('playerName').value = '';
+      } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Hubo un error al conectar con la nube.');
+      } finally {
+        btn.innerText = "Enviar a la Nube";
+        btn.disabled = false;
+      }
+    }
+
+    async function renderTierList() {
+      ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
+        document.getElementById(id).innerHTML = '<span style="color:#888; font-size:0.85rem; padding:5px;">Cargando clasificación global...</span>';
+      });
+      document.getElementById('tierListModal').style.display = 'flex';
+
+      try {
+        const response = await fetch(WEB_APP_URL);
+        const tierData = await response.json();
+
+        ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
+          document.getElementById(id).innerHTML = '';
+        });
+
+        if (tierData.length === 0) {
+          document.getElementById('tierS').innerHTML = '<span style="color:#aaa; padding:5px;">Aún no hay registros. ¡Sé el primero!</span>';
+          return;
+        }
+
+        tierData.forEach(entry => {
+          const container = document.getElementById(entry.tier);
+          if (container) {
+            const card = document.createElement('div');
+            card.className = 'tier-item-card';
+            card.innerText = `${entry.name} (${entry.score} pts)`;
+            container.appendChild(card);
+          }
+        });
+      } catch (error) {
+        console.error('Error al cargar la tier list:', error);
+        document.getElementById('tierS').innerHTML = '<span style="color:#ef4444; padding:5px;">Error al cargar datos.</span>';
+      }
     }
 
     window.onload = initMap;
