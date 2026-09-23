@@ -272,7 +272,7 @@
   <div id="saveScoreModal" class="modal">
     <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
       <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
-      <p class="text-xs text-slate-300 mb-4">Puntuación actual de práctica: <span id="finalScoreDisplay" class="font-bold text-white">0</span> pts</p>
+      <p class="text-xs text-slate-300 mb-4">Puntuación actual: <span id="finalScoreDisplay" class="font-bold text-white">0</span> pts</p>
       <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
       <div class="flex gap-2">
         <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
@@ -292,6 +292,25 @@
       </div>
       <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas).</p>
       
+      <!-- Selectores Duales (Mapa + Modo de Juego = 6 Listas) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Mapamundi:</label>
+          <select id="tierDatasetFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="world_phys">Mapamundi Físico</option>
+            <option value="world_pol">Mapamundi Político</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Modo de Juego:</label>
+          <select id="tierModeFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="practice">Práctica</option>
+            <option value="class">Clase (5)</option>
+            <option value="exam">Examen (30)</option>
+          </select>
+        </div>
+      </div>
+
       <div class="tier-row tier-s">
         <span class="tier-label">S</span>
         <div id="tierS" class="tier-items"></div>
@@ -316,9 +335,8 @@
   </div>
 
   <script>
-    // URL DE TU GOOGLE APPS SCRIPT
-    // URL DE TU GOOGLE APPS SCRIPT
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySFXzhqQPG0pJaxF_gE6ru1keFyjS9_vPce_KkY2YzFt1VZ8nH5F_vdA2MgT4cWfkpPg/exec";
+    // NUEVA URL DE GOOGLE APPS SCRIPT
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxYmlFV_Sm8twiNJh87fuzOmaSvhitI00h_3Lia-c41vXV6g6EM9IcXjrLLi3rjaX24/exec";
 
     // BASE DE DATOS COMPLETA DE GEOGRAFÍA
     const DATASETS = {
@@ -832,16 +850,38 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySFXzhqQPG0pJaxF_g
 
     // --- LÓGICA DE MODALES Y TIER LIST GLOBAL ---
 
-    function getTierByScore(score) {
-      if (score >= 300) return 'tierS';
-      if (score >= 200) return 'tierA';
-      if (score >= 100) return 'tierB';
-      if (score >= 30) return 'tierC';
-      return 'tierD';
+    // Umbrales exigentes basados en que S en Práctica sea >= 1500 pts
+    function getTierByScore(score, mode) {
+      if (mode === 'practice') {
+        if (score >= 1500) return 'tierS';
+        if (score >= 1000) return 'tierA';
+        if (score >= 500) return 'tierB';
+        if (score >= 200) return 'tierC';
+        return 'tierD';
+      } else if (mode === 'class') {
+        // Clase son 5 preguntas
+        if (score >= 5) return 'tierS';
+        if (score >= 4) return 'tierA';
+        if (score >= 3) return 'tierB';
+        if (score >= 2) return 'tierC';
+        return 'tierD';
+      } else {
+        // Examen son 30 preguntas
+        if (score >= 28) return 'tierS';
+        if (score >= 23) return 'tierA';
+        if (score >= 18) return 'tierB';
+        if (score >= 12) return 'tierC';
+        return 'tierD';
+      }
     }
 
     function openSaveModal() {
-      document.getElementById('finalScoreDisplay').innerText = practiceScore;
+      // Determinar qué puntuación guardar según el modo activo
+      let scoreToSave = practiceScore;
+      if (currentMode === 'class' || currentMode === 'exam') {
+        scoreToSave = quizHits;
+      }
+      document.getElementById('finalScoreDisplay').innerText = scoreToSave;
       document.getElementById('saveScoreModal').style.display = 'flex';
     }
 
@@ -857,8 +897,19 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySFXzhqQPG0pJaxF_g
         return;
       }
 
-      const assignedTier = getTierByScore(practiceScore);
-      const payload = { name: name, score: practiceScore, tier: assignedTier };
+      let scoreToSave = practiceScore;
+      if (currentMode === 'class' || currentMode === 'exam') {
+        scoreToSave = quizHits;
+      }
+
+      const assignedTier = getTierByScore(scoreToSave, currentMode);
+      const payload = { 
+        name: name, 
+        score: scoreToSave, 
+        tier: assignedTier, 
+        dataset: currentDatasetKey, 
+        mode: currentMode 
+      };
 
       const btn = document.getElementById('submitBtn');
       btn.innerText = "Subiendo...";
@@ -892,14 +943,20 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySFXzhqQPG0pJaxF_g
 
       try {
         const response = await fetch(WEB_APP_URL);
-        const tierData = await response.json();
+        const allData = await response.json();
+
+        // Filtrar según el mapa y el modo seleccionados en los desplegales de la modal
+        const selectedMap = document.getElementById('tierDatasetFilter').value;
+        const selectedMode = document.getElementById('tierModeFilter').value;
+        
+        const tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
 
         ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
           document.getElementById(id).innerHTML = '';
         });
 
         if (tierData.length === 0) {
-          document.getElementById('tierS').innerHTML = '<span style="color:#aaa; padding:5px;">Aún no hay registros. ¡Sé el primero!</span>';
+          document.getElementById('tierS').innerHTML = '<span style="color:#aaa; padding:5px;">Aún no hay registros para esta combinación.</span>';
           return;
         }
 
