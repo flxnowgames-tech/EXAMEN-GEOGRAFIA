@@ -312,7 +312,7 @@
     <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
       <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
       <p class="text-xs text-slate-300 mb-4">Puntuación / Media actual: <span id="finalScoreDisplay" class="font-bold text-white">0</span></p>
-      <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
+      <input type="text" id="playerName" placeholder="Tu nombre (ej: Juan )..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
       <div class="flex gap-2">
         <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
         <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
@@ -329,7 +329,7 @@
         </h2>
         <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas).</p>
+      <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas). Se muestra el mejor récord por estudiante.</p>
       
       <!-- Selectores Duales (Mapa + Modo de Juego = Listas Globales) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -346,7 +346,7 @@
             <option value="practice">Práctica</option>
             <option value="class">Clase (5)</option>
             <option value="exam">Examen (30)</option>
-            <option value="geoguesser">GeoGuessr Extremo 🔥</option>
+            <option value="geoguesser">GeoGuesser Extremo 🔥</option>
           </select>
         </div>
       </div>
@@ -376,7 +376,7 @@
 
   <script>
     // URL DE GOOGLE APPS SCRIPT
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxYmlFV_Sm8twiNJh87fuzOmaSvhitI00h_3Lia-c41vXV6g6EM9IcXjrLLi3rjaX24/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
 
     // BASE DE DATOS COMPLETA DE GEOGRAFÍA
     const DATASETS = {
@@ -978,7 +978,7 @@
             <span class="text-base font-extrabold text-amber-400">${mediaPorcentaje}% (${practiceHits}/${practiceTotal})</span>
           </div>
           <button onclick="openSaveModalForScore(${practiceScore})" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar en la Tier List
+            <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
           </button>
         </div>
       `;
@@ -991,9 +991,7 @@
       ggStreak = 0;
       ggRound = 0;
       
-      // Combinar Físico y Político en un solo pool gigantesco
       const combinedItems = [...DATASETS.world_phys.items, ...DATASETS.world_pol.items];
-      // Desordenar aleatoriamente y coger 10 rondas
       ggCurrentPool = combinedItems.sort(() => 0.5 - Math.random()).slice(0, 10);
       
       document.getElementById('ggScore').innerText = ggScore;
@@ -1016,7 +1014,7 @@
     }
 
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Radio de la Tierra en km
+      const R = 6371; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = 
@@ -1040,9 +1038,14 @@
             <i class="fa-solid fa-trophy text-amber-400 text-3xl mb-2"></i>
             <h3 class="text-sm font-bold text-white mb-1">¡GeoGuessr Extremo Completado! 🔥</h3>
             <p class="text-xs text-slate-300 mb-3">Puntuación Total: <span class="font-bold text-amber-400">${ggScore} pts</span></p>
-            <button onclick="openSaveModalForScore(${ggScore})" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
-            </button>
+            <div class="flex gap-2">
+              <button onclick="openSaveModalForScore(${ggScore})" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
+              </button>
+              <button onclick="startGeoGuessrMode()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-rotate-right"></i> Reiniciar
+              </button>
+            </div>
           </div>
         `;
         return;
@@ -1057,7 +1060,6 @@
       document.getElementById('ggResultFeedback').classList.add('hidden');
       document.getElementById('ggNextBtn').classList.add('hidden');
 
-      // Escuchar clic en cualquier parte del mapa para GeoGuessr
       map.once('click', function(e) {
         if (ggWaitingForNext) return;
         ggWaitingForNext = true;
@@ -1069,7 +1071,6 @@
 
         const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
 
-        // Sistema de Puntuación Geoguesser con Bonificación de Racha 🔥
         let roundPoints = 0;
         if (distanceKm < 150) {
           roundPoints = 500;
@@ -1085,11 +1086,10 @@
           playAudio('correct');
         } else {
           roundPoints = 0;
-          ggStreak = 0; // Se rompe la racha si fallas por mucho (>1200km)
+          ggStreak = 0;
           playAudio('wrong');
         }
 
-        // Multiplicador de racha (cada 3 de racha da un extra)
         const streakBonus = Math.floor(ggStreak / 3) * 50;
         const totalRoundScore = roundPoints + streakBonus;
         ggScore += totalRoundScore;
@@ -1097,15 +1097,12 @@
         document.getElementById('ggScore').innerText = ggScore;
         document.getElementById('ggStreak').innerText = ggStreak;
 
-        // Mostrar marcador en el clic del usuario y marcador real en el objetivo
         const userMarker = L.circleMarker([clickLat, clickLng], { radius: 7, color: '#ef4444', fillColor: '#f87171', fillOpacity: 0.9 }).addTo(markersLayer);
         const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
         targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
 
-        // Trazar línea de distancia
         ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
 
-        // Feedback visual
         const feedbackDiv = document.getElementById('ggResultFeedback');
         feedbackDiv.innerHTML = `
           📍 Error: <b>${Math.round(distanceKm)} km</b><br>
@@ -1221,7 +1218,17 @@
         const selectedMap = document.getElementById('tierDatasetFilter').value;
         const selectedMode = document.getElementById('tierModeFilter').value;
         
-        const tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
+        let tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
+
+        // Deduplicar por nombre: conservar únicamente la mayor puntuación de cada estudiante
+        const uniqueMap = new Map();
+        tierData.forEach(item => {
+          if (!uniqueMap.has(item.name) || Number(uniqueMap.get(item.name).score) < Number(item.score)) {
+            uniqueMap.set(item.name, item);
+          }
+        });
+        tierData = Array.from(uniqueMap.values());
+        tierData.sort((a, b) => Number(b.score) - Number(a.score));
 
         ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
           document.getElementById(id).innerHTML = '';
