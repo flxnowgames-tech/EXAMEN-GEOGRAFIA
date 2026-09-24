@@ -287,8 +287,12 @@
             <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
           </p>
           <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-          <p class="text-xs text-slate-300 mb-3">Haz clic <b>en cualquier lugar del mapa</b>. ¡Cuanto más cerca, más puntos y racha!</p>
+          <p class="text-xs text-slate-300 mb-3">Haz clic en el mapa para marcar y pulsa confirmar.</p>
           <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
+          
+          <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
+            Confirmar Ubicación 🎯
+          </button>
           <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
             Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
           </button>
@@ -312,7 +316,7 @@
     <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
       <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
       <p class="text-xs text-slate-300 mb-4">Puntuación / Media actual: <span id="finalScoreDisplay" class="font-bold text-white">0</span></p>
-      <input type="text" id="playerName" placeholder="Tu nombre (ej: Juan )..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
+      <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
       <div class="flex gap-2">
         <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
         <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
@@ -346,7 +350,7 @@
             <option value="practice">Práctica</option>
             <option value="class">Clase (5)</option>
             <option value="exam">Examen (30)</option>
-            <option value="geoguesser">GeoGuesser Extremo 🔥</option>
+            <option value="geoguesser">GeoGuessr Extremo 🔥</option>
           </select>
         </div>
       </div>
@@ -375,7 +379,7 @@
   </div>
 
   <script>
-    // URL DE GOOGLE APPS SCRIPT
+    // NUEVA URL DE GOOGLE APPS SCRIPT
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
 
     // BASE DE DATOS COMPLETA DE GEOGRAFÍA
@@ -656,6 +660,8 @@
     let ggCurrentPool = [];
     let ggWaitingForNext = false;
     let ggLineLayer = null;
+    let ggSelectedLatLng = null;
+    let ggTempMarker = null;
 
     let audioCtx = null;
     let isMuted = false;
@@ -767,10 +773,12 @@
       });
 
       if (mode === 'study') {
+        map.off('click', onGeoGuessrMapClick);
         renderStudyList();
       } else if (mode === 'geoguesser') {
         startGeoGuessrMode();
       } else {
+        map.off('click', onGeoGuessrMapClick);
         startQuizMode();
       }
     }
@@ -985,7 +993,7 @@
       markersLayer.clearLayers();
     }
 
-    // --- MODO GEOGUESSR EXTREMO (FÍSICO + POLÍTICO COMBINADOS) ---
+    // --- MODO GEOGUESSR EXTREMO CON BOTÓN DE CONFIRMAR Y REINICIO ---
     function startGeoGuessrMode() {
       ggScore = 0;
       ggStreak = 0;
@@ -1003,14 +1011,42 @@
           <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
         </p>
         <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-        <p class="text-xs text-slate-300 mb-3">Haz clic <b>en cualquier lugar del mapa</b>. ¡Cuanto más cerca, más puntos y racha 🔥!</p>
+        <p class="text-xs text-slate-300 mb-3">Haz clic en el mapa para marcar y pulsa confirmar.</p>
         <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
+        <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
+          Confirmar Ubicación 🎯
+        </button>
         <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
           Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
         </button>
       `;
 
+      map.off('click', onGeoGuessrMapClick);
+      map.on('click', onGeoGuessrMapClick);
+
       nextGeoGuessrRound();
+    }
+
+    function onGeoGuessrMapClick(e) {
+      if (ggWaitingForNext) return;
+      ggSelectedLatLng = e.latlng;
+
+      if (ggTempMarker) {
+        markersLayer.removeLayer(ggTempMarker);
+      }
+      ggTempMarker = L.circleMarker([ggSelectedLatLng.lat, ggSelectedLatLng.lng], {
+        radius: 7,
+        color: '#ef4444',
+        fillColor: '#f87171',
+        fillOpacity: 0.9
+      }).addTo(markersLayer);
+
+      const confirmBtn = document.getElementById('ggConfirmBtn');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-pointer";
+        confirmBtn.innerText = "Confirmar Ubicación 🎯";
+      }
     }
 
     function calculateDistanceKm(lat1, lon1, lat2, lon2) {
@@ -1025,14 +1061,74 @@
       return R * c;
     }
 
+    function confirmGeoGuessrSelection() {
+      if (!ggSelectedLatLng || ggWaitingForNext) return;
+      ggWaitingForNext = true;
+
+      const clickLat = ggSelectedLatLng.lat;
+      const clickLng = ggSelectedLatLng.lng;
+      const targetLat = currentQuestionItem.lat;
+      const targetLng = currentQuestionItem.lng;
+
+      const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
+
+      let roundPoints = 0;
+      if (distanceKm < 150) {
+        roundPoints = 500;
+        ggStreak++;
+        playAudio('correct');
+      } else if (distanceKm < 500) {
+        roundPoints = 250;
+        ggStreak++;
+        playAudio('correct');
+      } else if (distanceKm < 1200) {
+        roundPoints = 100;
+        ggStreak++;
+        playAudio('correct');
+      } else {
+        roundPoints = 0;
+        ggStreak = 0;
+        playAudio('wrong');
+      }
+
+      const streakBonus = Math.floor(ggStreak / 3) * 50;
+      const totalRoundScore = roundPoints + streakBonus;
+      ggScore += totalRoundScore;
+
+      document.getElementById('ggScore').innerText = ggScore;
+      document.getElementById('ggStreak').innerText = ggStreak;
+
+      const confirmBtn = document.getElementById('ggConfirmBtn');
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.className = "hidden w-full bg-slate-700 text-slate-500 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
+      }
+
+      const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
+      targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
+
+      ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
+
+      const feedbackDiv = document.getElementById('ggResultFeedback');
+      feedbackDiv.innerHTML = `
+        📍 Error: <b>${Math.round(distanceKm)} km</b><br>
+        ⭐ Puntos ronda: <b>+${totalRoundScore} pts</b> ${streakBonus > 0 ? `(🔥 +${streakBonus} extra)` : ''}
+      `;
+      feedbackDiv.classList.remove('hidden');
+      document.getElementById('ggNextBtn').classList.remove('hidden');
+    }
+
     function nextGeoGuessrRound() {
       markersLayer.clearLayers();
+      ggTempMarker = null;
+      ggSelectedLatLng = null;
       if (ggLineLayer) {
         map.removeLayer(ggLineLayer);
         ggLineLayer = null;
       }
 
       if (ggRound >= ggCurrentPool.length) {
+        map.off('click', onGeoGuessrMapClick);
         document.getElementById('ggQuestionBox').innerHTML = `
           <div class="text-center py-2">
             <i class="fa-solid fa-trophy text-amber-400 text-3xl mb-2"></i>
@@ -1059,58 +1155,13 @@
       document.getElementById('ggTargetName').innerText = currentQuestionItem.name;
       document.getElementById('ggResultFeedback').classList.add('hidden');
       document.getElementById('ggNextBtn').classList.add('hidden');
-
-      map.once('click', function(e) {
-        if (ggWaitingForNext) return;
-        ggWaitingForNext = true;
-
-        const clickLat = e.latlng.lat;
-        const clickLng = e.latlng.lng;
-        const targetLat = currentQuestionItem.lat;
-        const targetLng = currentQuestionItem.lng;
-
-        const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
-
-        let roundPoints = 0;
-        if (distanceKm < 150) {
-          roundPoints = 500;
-          ggStreak++;
-          playAudio('correct');
-        } else if (distanceKm < 500) {
-          roundPoints = 250;
-          ggStreak++;
-          playAudio('correct');
-        } else if (distanceKm < 1200) {
-          roundPoints = 100;
-          ggStreak++;
-          playAudio('correct');
-        } else {
-          roundPoints = 0;
-          ggStreak = 0;
-          playAudio('wrong');
-        }
-
-        const streakBonus = Math.floor(ggStreak / 3) * 50;
-        const totalRoundScore = roundPoints + streakBonus;
-        ggScore += totalRoundScore;
-
-        document.getElementById('ggScore').innerText = ggScore;
-        document.getElementById('ggStreak').innerText = ggStreak;
-
-        const userMarker = L.circleMarker([clickLat, clickLng], { radius: 7, color: '#ef4444', fillColor: '#f87171', fillOpacity: 0.9 }).addTo(markersLayer);
-        const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
-        targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
-
-        ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
-
-        const feedbackDiv = document.getElementById('ggResultFeedback');
-        feedbackDiv.innerHTML = `
-          📍 Error: <b>${Math.round(distanceKm)} km</b><br>
-          ⭐ Puntos ronda: <b>+${totalRoundScore} pts</b> ${streakBonus > 0 ? `(🔥 +${streakBonus} extra)` : ''}
-        `;
-        feedbackDiv.classList.remove('hidden');
-        document.getElementById('ggNextBtn').classList.remove('hidden');
-      });
+      
+      const confirmBtn = document.getElementById('ggConfirmBtn');
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.className = "w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
+        confirmBtn.innerText = "Confirmar Ubicación 🎯";
+      }
     }
 
     // --- LÓGICA DE MODALES Y TIER LIST GLOBAL ---
@@ -1220,7 +1271,6 @@
         
         let tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
 
-        // Deduplicar por nombre: conservar únicamente la mayor puntuación de cada estudiante
         const uniqueMap = new Map();
         tierData.forEach(item => {
           if (!uniqueMap.has(item.name) || Number(uniqueMap.get(item.name).score) < Number(item.score)) {
