@@ -96,57 +96,61 @@
   <div id="toastNotification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-none"></div>
 
   <!-- Top Navigation Bar -->
-  <header class="bg-slate-800/90 border-b border-slate-700/80 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 z-20 backdrop-blur-md shadow-md">
-    <div class="flex items-center space-x-3">
-      <div class="bg-gradient-to-tr from-sky-500 to-indigo-600 p-2.5 rounded-xl shadow-lg text-white">
-        <i class="fa-solid fa-earth-americas text-xl"></i>
+  <header class="bg-slate-800/90 border-b border-slate-700/80 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-30 backdrop-blur-md shadow-md">
+    <div class="flex items-center space-x-2.5">
+      <!-- Botón Toggle Sidebar en Móvil -->
+      <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg bg-sky-600 text-white text-xs font-semibold shadow" title="Mostrar/Ocultar Panel">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+      <div class="bg-gradient-to-tr from-sky-500 to-indigo-600 p-2 rounded-xl shadow-lg text-white hidden xs:block">
+        <i class="fa-solid fa-earth-americas text-lg"></i>
       </div>
       <div>
-        <h1 class="font-bold text-lg leading-tight text-white flex items-center gap-2">
+        <h1 class="font-bold text-sm sm:text-lg leading-tight text-white flex items-center gap-2">
           Examen Geografía
         </h1>
-        <p class="text-xs text-slate-400 hidden sm:block">IES Fernando de Herrera</p>
+        <p class="text-[10px] text-slate-400 hidden sm:block">IES Fernando de Herrera</p>
       </div>
     </div>
 
     <!-- Map & Mode Controls -->
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
       <!-- Selector de Mapa Principal -->
       <div class="relative">
-        <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-inner">
-          <option value="world_phys">Mapamundi Físico</option>
-          <option value="world_pol">Mapamundi Político</option>
+        <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-inner">
+          <option value="world_phys">Físico</option>
+          <option value="world_pol">Político</option>
         </select>
       </div>
 
       <!-- Game Mode Switcher -->
-      <div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-700/80">
-        <button id="modeStudyBtn" onclick="switchMode('study')" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-sky-600 text-white shadow">
-          <i class="fa-solid fa-book-open"></i> <span class="hidden md:inline">Estudio</span>
+      <div class="flex bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-700/80 overflow-x-auto max-w-[220px] sm:max-w-none">
+        <button id="modeStudyBtn" onclick="switchMode('study')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap">
+          <i class="fa-solid fa-book-open"></i> <span class="hidden lg:inline">Estudio</span>
         </button>
-        <button id="modePracticeBtn" onclick="switchMode('practice')" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-bullseye"></i> <span class="hidden md:inline">Práctica</span>
+        <button id="modePracticeBtn" onclick="switchMode('practice')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+          <i class="fa-solid fa-bullseye"></i> <span class="hidden lg:inline">Práctica</span>
         </button>
-        <button id="modeClassBtn" onclick="switchMode('class')" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-chalkboard-user"></i> <span class="hidden md:inline">Clase (5)</span>
+        <button id="modeClassBtn" onclick="switchMode('class')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+          <i class="fa-solid fa-chalkboard-user"></i> <span class="hidden lg:inline">Clase (5)</span>
         </button>
-        <button id="modeExamBtn" onclick="switchMode('exam')" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-pen-clip"></i> <span class="hidden md:inline">Examen (30)</span>
+        <button id="modeExamBtn" onclick="switchMode('exam')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+          <i class="fa-solid fa-pen-clip"></i> <span class="hidden lg:inline">Examen (30)</span>
         </button>
-        <button id="modeGeoguesserBtn" onclick="switchMode('geoguesser')" class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow">
-          <i class="fa-solid fa-crosshairs"></i> <span class="hidden md:inline">GeoGuessr Extremo 🔥</span>
+        <button id="modeGeoguesserBtn" onclick="switchMode('geoguesser')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow whitespace-nowrap">
+          <i class="fa-solid fa-crosshairs"></i> <span class="hidden lg:inline">GeoGuessr 🔥</span>
         </button>
       </div>
 
       <!-- Tier List & Sound Buttons -->
-      <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-2">
-        <button onclick="openSaveModal()" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
+      <div class="flex items-center gap-1 border-l border-slate-700/80 pl-1.5">
+        <button onclick="openSaveModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
           <i class="fa-solid fa-floppy-disk"></i> <span class="hidden lg:inline">Guardar</span>
         </button>
-        <button onclick="renderTierList()" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow" title="Ver Tier List Global">
+        <button onclick="renderTierList()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow" title="Ver Tier List Global">
           <i class="fa-solid fa-trophy"></i> <span class="hidden lg:inline">Tier List</span>
         </button>
-        <button id="muteBtn" onclick="toggleMute()" class="p-2 rounded-lg bg-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Sonido">
+        <button id="muteBtn" onclick="toggleMute()" class="p-1.5 sm:p-2 rounded-lg bg-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Sonido">
           <i id="muteIcon" class="fa-solid fa-volume-high text-xs"></i>
         </button>
       </div>
@@ -157,8 +161,14 @@
   <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
     
     <!-- Sidebar Controls Panel -->
-    <aside id="sidebar" class="w-full md:w-80 lg:w-96 bg-slate-800/95 border-r border-slate-700/80 flex flex-col z-10 shrink-0 max-h-[45vh] md:max-h-none overflow-y-auto shadow-xl">
+    <aside id="sidebar" class="absolute md:relative inset-y-0 left-0 z-20 w-80 md:w-80 lg:w-96 bg-slate-800/98 md:bg-slate-800/95 border-r border-slate-700/80 flex flex-col shrink-0 overflow-y-auto shadow-2xl transition-transform duration-300 -translate-x-full md:translate-x-0">
       
+      <!-- Botón Cerrar Panel en Móvil -->
+      <div class="md:hidden p-3 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+        <span class="text-xs font-bold text-sky-400">Panel de Control</span>
+        <button onclick="toggleMobileSidebar()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
       <!-- MODE 1: ESTUDIO -->
       <div id="panelStudy" class="p-4 flex flex-col gap-3">
         <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
@@ -267,9 +277,9 @@
         <div class="bg-slate-900/60 p-3 rounded-xl border border-rose-500/40 flex justify-between items-center shadow-lg">
           <div>
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-crosshairs"></i> GeoGuessr Extremo 🔥
+              <i class="fa-solid fa-crosshairs"></i> GeoGuessr 🔥
             </span>
-            <p class="text-xs text-slate-400 mt-0.5">Físico + Político unidos</p>
+            <p class="text-xs text-slate-400 mt-0.5">Físico + Político</p>
           </div>
           <div class="text-right">
             <div class="text-xs font-bold text-amber-400 flex items-center justify-end gap-1">
@@ -287,9 +297,8 @@
             <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
           </p>
           <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-          <p class="text-xs text-slate-300 mb-3">Haz clic en el mapa para marcar y pulsa confirmar.</p>
+          <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
           <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
-          
           <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
             Confirmar Ubicación 🎯
           </button>
@@ -304,6 +313,12 @@
     <!-- Leaflet Map Canvas -->
     <main class="flex-1 relative h-full w-full bg-slate-950">
       <div id="map" class="h-full w-full z-0"></div>
+      
+      <!-- Botón flotante rápido para ocultar/mostrar panel en móvil cuando se está jugando -->
+      <button onclick="toggleMobileSidebar()" class="md:hidden absolute top-3 left-3 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-2 rounded-xl text-xs text-white shadow-xl flex items-center gap-1.5">
+        <i class="fa-solid fa-bars"></i> <span>Panel</span>
+      </button>
+
       <div class="absolute bottom-4 right-4 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] text-slate-300 shadow-xl flex items-center gap-2">
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span>@manzana</span>
@@ -379,7 +394,7 @@
   </div>
 
   <script>
-    // NUEVA URL DE GOOGLE APPS SCRIPT
+    // URL DE GOOGLE APPS SCRIPT
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
 
     // BASE DE DATOS COMPLETA DE GEOGRAFÍA
@@ -703,6 +718,11 @@
         'fa-solid fa-volume-high text-xs text-slate-300';
     }
 
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    }
+
     function showToast(message, type) {
       const toast = document.getElementById('toastNotification');
       if (!toast) return;
@@ -759,18 +779,22 @@
         const btn = document.getElementById(btnMap[m]);
         if (m === mode) {
           if (m === 'geoguesser') {
-            btn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow ring-2 ring-amber-400";
+            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow ring-2 ring-amber-400 whitespace-nowrap";
           } else {
-            btn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-sky-600 text-white shadow";
+            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap";
           }
         } else {
           if (m === 'geoguesser') {
-            btn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5 bg-gradient-to-r from-amber-600/60 to-rose-600/60";
+            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600/60 to-rose-600/60 whitespace-nowrap";
           } else {
-            btn.className = "px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5";
+            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap";
           }
         }
       });
+
+      if (window.innerWidth < 768) {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+      }
 
       if (mode === 'study') {
         map.off('click', onGeoGuessrMapClick);
@@ -821,6 +845,9 @@
           div.onclick = () => {
             map.flyTo([item.lat, item.lng], 5);
             marker.openPopup();
+            if (window.innerWidth < 768) {
+              document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
           };
           container.appendChild(div);
         }
@@ -920,7 +947,6 @@
         document.getElementById('examProgress').innerText = `Pregunta ${quizIndex + 1} de ${quizQuestions.length}`;
       }
 
-      // Dibujar todos los puntos interactivos
       items.forEach(item => {
         const marker = L.circleMarker([item.lat, item.lng], {
           radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
@@ -993,7 +1019,7 @@
       markersLayer.clearLayers();
     }
 
-    // --- MODO GEOGUESSR EXTREMO CON BOTÓN DE CONFIRMAR Y REINICIO ---
+    // --- MODO GEOGUESSR EXTREMO ---
     function startGeoGuessrMode() {
       ggScore = 0;
       ggStreak = 0;
@@ -1011,7 +1037,7 @@
           <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
         </p>
         <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-        <p class="text-xs text-slate-300 mb-3">Haz clic en el mapa para marcar y pulsa confirmar.</p>
+        <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
         <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
         <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
           Confirmar Ubicación 🎯
@@ -1164,7 +1190,7 @@
       }
     }
 
-    // --- LÓGICA DE MODALES Y TIER LIST GLOBAL ---
+    // --- MODALES Y TIER LIST GLOBAL ---
 
     function getTierByScore(score, mode) {
       if (mode === 'practice') {
@@ -1278,7 +1304,7 @@
           }
         });
         tierData = Array.from(uniqueMap.values());
-        tierData.sort((a, b) => Number(b.score) - Number(a.score));
+        tierData.sort((a, b) => Number(b.score) - Number(b.score));
 
         ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
           document.getElementById(id).innerHTML = '';
