@@ -1,297 +1,1075 @@
 <!DOCTYPE html>
 <html lang="es" class="h-full bg-slate-900 text-slate-100">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Examen Geografía - Tier List Global</title>
-  
-  <!-- Icono de bola del mundo para la pestaña -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen Geografía - Tier List Global</title>
+    
+    <!-- Icono de bola del mundo para la pestaña -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  
-  <!-- Google Font: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <style>
-    .leaflet-container {
-      background-color: #1e293b !important;
-      font-family: 'Inter', sans-serif;
-    }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    <style>
+      .leaflet-container {
+        background-color: #1e293b !important;
+        font-family: 'Inter', sans-serif;
+      }
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-    /* Modales y Tier List */
-    .modal {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        backdrop-filter: blur(4px);
-    }
-    .tier-container {
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-    .tier-row {
-        display: flex;
-        margin: 8px 0;
-        border-radius: 8px;
-        overflow: hidden;
-        min-height: 55px;
-        border: 1px solid #334155;
-    }
-    .tier-label {
-        width: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.4rem;
-        color: #000;
-    }
-    .tier-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 8px;
-        align-items: center;
-        flex-grow: 1;
-        background: #0f172a;
-    }
-    .tier-s .tier-label { background: #ff7f7f; }
-    .tier-a .tier-label { background: #ffbf7f; }
-    .tier-b .tier-label { background: #ffdf7f; }
-    .tier-c .tier-label { background: #ffff7f; }
-    .tier-d .tier-label { background: #7fff7f; }
+      /* Animación mítica GeoGuessr 5K */
+      @keyframes geoguessr5k {
+        0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+        50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+        100% { transform: scale(1) rotate(0deg); opacity: 1; }
+      }
+      .anim-5k {
+        animation: geoguessr5k 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
 
-    .tier-item-card {
-        background: #1e293b;
-        color: #f8fafc;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        border: 1px solid #475569;
-    }
-  </style>
+      /* Modales y Tier List */
+      .modal {
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7);
+          display: none;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+          backdrop-filter: blur(4px);
+      }
+      .tier-container {
+          max-height: 80vh;
+          overflow-y: auto;
+      }
+      .tier-row {
+          display: flex;
+          margin: 8px 0;
+          border-radius: 8px;
+          overflow: hidden;
+          min-height: 55px;
+          border: 1px solid #334155;
+      }
+      .tier-label {
+          width: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.4rem;
+          color: #000;
+      }
+      .tier-items {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 8px;
+          align-items: center;
+          flex-grow: 1;
+          background: #0f172a;
+      }
+      .tier-s .tier-label { background: #ff7f7f; }
+      .tier-a .tier-label { background: #ffbf7f; }
+      .tier-b .tier-label { background: #ffdf7f; }
+      .tier-c .tier-label { background: #ffff7f; }
+      .tier-d .tier-label { background: #7fff7f; }
+
+      .tier-item-card {
+          background: #1e293b;
+          color: #f8fafc;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          border: 1px solid #475569;
+      }
+    </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden bg-slate-900 text-slate-100 relative">
 
-  <!-- Toast Notification -->
-  <div id="toastNotification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-none"></div>
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-none"></div>
 
-  <!-- Top Navigation Bar -->
-  <header class="bg-slate-800/90 border-b border-slate-700/80 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-30 backdrop-blur-md shadow-md">
-    <div class="flex items-center space-x-2.5">
-      <!-- Botón Toggle Sidebar en Móvil -->
-      <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg bg-sky-600 text-white text-xs font-semibold shadow" title="Mostrar/Ocultar Panel">
-        <i class="fa-solid fa-sliders"></i>
-      </button>
-      <div class="bg-gradient-to-tr from-sky-500 to-indigo-600 p-2 rounded-xl shadow-lg text-white hidden xs:block">
-        <i class="fa-solid fa-earth-americas text-lg"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-sm sm:text-lg leading-tight text-white flex items-center gap-2">
-          Examen Geografía
-        </h1>
-        <p class="text-[10px] text-slate-400 hidden sm:block">IES Fernando de Herrera</p>
-      </div>
-    </div>
-
-    <!-- Map & Mode Controls -->
-    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-      <!-- Selector de Mapa Principal -->
-      <div class="relative">
-        <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-inner">
-          <option value="world_phys">Físico</option>
-          <option value="world_pol">Político</option>
-        </select>
-      </div>
-
-      <!-- Game Mode Switcher -->
-      <div class="flex bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-700/80 overflow-x-auto max-w-[220px] sm:max-w-none">
-        <button id="modeStudyBtn" onclick="switchMode('study')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap">
-          <i class="fa-solid fa-book-open"></i> <span class="hidden lg:inline">Estudio</span>
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800/90 border-b border-slate-700/80 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-30 backdrop-blur-md shadow-md">
+      <div class="flex items-center space-x-2.5">
+        <!-- Botón Toggle Sidebar en Móvil -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg bg-sky-600 text-white text-xs font-semibold shadow" title="Mostrar/Ocultar Panel">
+          <i class="fa-solid fa-sliders"></i>
         </button>
-        <button id="modePracticeBtn" onclick="switchMode('practice')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
-          <i class="fa-solid fa-bullseye"></i> <span class="hidden lg:inline">Práctica</span>
-        </button>
-        <button id="modeClassBtn" onclick="switchMode('class')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
-          <i class="fa-solid fa-chalkboard-user"></i> <span class="hidden lg:inline">Clase (5)</span>
-        </button>
-        <button id="modeExamBtn" onclick="switchMode('exam')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
-          <i class="fa-solid fa-pen-clip"></i> <span class="hidden lg:inline">Examen (30)</span>
-        </button>
-        <button id="modeGeoguesserBtn" onclick="switchMode('geoguesser')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow whitespace-nowrap">
-          <i class="fa-solid fa-crosshairs"></i> <span class="hidden lg:inline">GeoGuessr 🔥</span>
-        </button>
-      </div>
-
-      <!-- Tier List & Sound Buttons -->
-      <div class="flex items-center gap-1 border-l border-slate-700/80 pl-1.5">
-        <button onclick="openSaveModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
-          <i class="fa-solid fa-floppy-disk"></i> <span class="hidden lg:inline">Guardar</span>
-        </button>
-        <button onclick="renderTierList()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow" title="Ver Tier List Global">
-          <i class="fa-solid fa-trophy"></i> <span class="hidden lg:inline">Tier List</span>
-        </button>
-        <button id="muteBtn" onclick="toggleMute()" class="p-1.5 sm:p-2 rounded-lg bg-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Sonido">
-          <i id="muteIcon" class="fa-solid fa-volume-high text-xs"></i>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content Layout -->
-  <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-    
-    <!-- Sidebar Controls Panel -->
-    <aside id="sidebar" class="absolute md:relative inset-y-0 left-0 z-20 w-80 md:w-80 lg:w-96 bg-slate-800/98 md:bg-slate-800/95 border-r border-slate-700/80 flex flex-col shrink-0 overflow-y-auto shadow-2xl transition-transform duration-300 -translate-x-full md:translate-x-0">
-      
-      <!-- Botón Cerrar Panel en Móvil -->
-      <div class="md:hidden p-3 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
-        <span class="text-xs font-bold text-sky-400">Panel de Control</span>
-        <button onclick="toggleMobileSidebar()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <!-- MODE 1: ESTUDIO -->
-      <div id="panelStudy" class="p-4 flex flex-col gap-3">
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-compass"></i> Modo Estudio
-            </span>
-            <span id="studyTotalBadge" class="text-[11px] font-semibold bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full border border-sky-500/20">0 Elementos</span>
-          </div>
-          <p class="text-xs text-slate-300 leading-relaxed">
-            Explora libremente el mapa. Usa los filtros o busca cualquier accidente geográfico para ubicarlo exactamente.
-          </p>
+        <div class="bg-gradient-to-tr from-sky-500 to-indigo-600 p-2 rounded-xl shadow-lg text-white hidden xs:block">
+          <i class="fa-solid fa-earth-americas text-lg"></i>
         </div>
-
-        <div id="studySearchContainer" class="relative">
-          <label class="block text-xs font-semibold text-slate-300 mb-1">🔍 Buscar / Ir a...</label>
-          <div class="relative">
-            <input type="text" id="searchInput" placeholder="Escribe para buscar..." oninput="renderStudyList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
-          </div>
-        </div>
-
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Filtrar por Categoría:</label>
-          <select id="categoryFilter" onchange="renderStudyList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
-            <option value="ALL">Todas las Categorías</option>
+          <h1 class="font-bold text-sm sm:text-lg leading-tight text-white flex items-center gap-2">
+            Examen Geografía
+          </h1>
+          <p class="text-[10px] text-slate-400 hidden sm:block">IES Fernando de Herrera</p>
+        </div>
+      </div>
+
+      <!-- Map & Mode Controls -->
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <!-- Selector de Mapa Principal -->
+        <div class="relative">
+          <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-500 border border-slate-700/50 rounded-lg px-2 py-1.5 text-xs font-medium cursor-not-allowed opacity-60 shadow-inner" disabled>
+            <option value="world_phys">Físico</option>
+            <option value="world_pol">Político</option>
           </select>
         </div>
 
-        <div class="flex-1 min-h-[160px] max-h-[300px] md:max-h-[calc(100vh-340px)] overflow-y-auto space-y-1.5 pr-1" id="studyItemsList"></div>
-      </div>
-
-      <!-- MODE 2: PRÁCTICA -->
-      <div id="panelPractice" class="p-4 hidden flex-col gap-3">
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center">
-          <div>
-            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-bullseye"></i> Modo Práctica
-            </span>
-            <p class="text-xs text-slate-400 mt-0.5">+10 acierto / -10 fallo</p>
-          </div>
-          <div class="text-right">
-            <div class="text-xs font-bold text-emerald-400 flex items-center justify-end gap-1">
-              <i class="fa-solid fa-star"></i> Puntos: <span id="practiceScore" class="text-sm text-white">0</span>
-            </div>
-          </div>
+        <!-- Game Mode Switcher -->
+        <div class="flex bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-700/80 overflow-x-auto max-w-[220px] sm:max-w-none">
+          <button id="modeStudyBtn" onclick="switchMode('study')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap">
+            <i class="fa-solid fa-book-open"></i> <span class="hidden lg:inline">Estudio</span>
+          </button>
+          <button id="modePracticeBtn" onclick="switchMode('practice')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+            <i class="fa-solid fa-bullseye"></i> <span class="hidden lg:inline">Práctica</span>
+          </button>
+          <button id="modeClassBtn" onclick="switchMode('class')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+            <i class="fa-solid fa-chalkboard-user"></i> <span class="hidden lg:inline">Clase (5)</span>
+          </button>
+          <button id="modeExamBtn" onclick="switchMode('exam')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap">
+            <i class="fa-solid fa-pen-clip"></i> <span class="hidden lg:inline">Examen (30)</span>
+          </button>
+          <button id="modeGeoguesserBtn" onclick="switchMode('geoguesser')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow whitespace-nowrap">
+            <i class="fa-solid fa-crosshairs"></i> <span class="hidden lg:inline">GeoGuessr 🔥</span>
+          </button>
         </div>
 
-        <div id="practiceQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-sky-500/30 rounded-xl p-4 shadow-lg">
-          <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
-            <span>¿DÓNDE SE ENCUENTRA?</span>
-            <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
-          </p>
-          <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-          <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
-          <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
-            <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
+        <!-- Tier List & Sound Buttons -->
+        <div class="flex items-center gap-1 border-l border-slate-700/80 pl-1.5">
+          <button onclick="openSaveModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
+            <i class="fa-solid fa-floppy-disk"></i> <span class="hidden lg:inline">Guardar</span>
+          </button>
+          <button onclick="renderTierList()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow" title="Ver Tier List Global">
+            <i class="fa-solid fa-trophy"></i> <span class="hidden lg:inline">Tier List</span>
+          </button>
+          <button id="muteBtn" onclick="toggleMute()" class="p-1.5 sm:p-2 rounded-lg bg-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Sonido">
+            <i id="muteIcon" class="fa-solid fa-volume-high text-xs"></i>
           </button>
         </div>
       </div>
+    </header>
 
-      <!-- MODE 3: CLASE -->
-      <div id="panelClass" class="p-4 hidden flex-col gap-3">
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
-          <div>
-            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-chalkboard-user"></i> Modo Clase (5 Preguntas)
-            </span>
-            <p class="text-xs text-slate-400" id="classProgress">Pregunta 1 de 5</p>
-          </div>
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+      
+      <!-- Sidebar Controls Panel -->
+      <aside id="sidebar" class="absolute md:relative inset-y-0 left-0 z-20 w-80 md:w-80 lg:w-96 bg-slate-800/98 md:bg-slate-800/95 border-r border-slate-700/80 flex flex-col shrink-0 overflow-y-auto shadow-2xl transition-transform duration-300 -translate-x-full md:translate-x-0">
+        
+        <!-- Botón Cerrar Panel en Móvil -->
+        <div class="md:hidden p-3 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+          <span class="text-xs font-bold text-sky-400">Panel de Control</span>
+          <button onclick="toggleMobileSidebar()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <div id="classQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-xl p-4 shadow-lg">
-          <p class="text-xs font-semibold text-emerald-400 mb-1 flex items-center justify-between">
-            <span>¿DÓNDE SE ENCUENTRA?</span>
-            <span id="classCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300">Categoría</span>
-          </p>
-          <h2 id="classTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-          <p class="text-xs text-slate-400 mb-2">Haz clic en la ubicación correspondiente.</p>
-        </div>
-      </div>
-
-      <!-- MODE 4: EXAMEN -->
-      <div id="panelExam" class="p-4 hidden flex-col gap-3">
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
-          <div>
-            <span class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-graduation-cap"></i> Modo Examen (30 Preguntas)
-            </span>
-            <p class="text-xs text-slate-400" id="examProgress">Pregunta 1 de 30</p>
-          </div>
-        </div>
-
-        <div id="examQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-rose-500/30 rounded-xl p-4 shadow-lg">
-          <p class="text-xs font-semibold text-rose-400 mb-1 flex items-center justify-between">
-            <span>¿DÓNDE SE ENCUENTRA?</span>
-            <span id="examCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300">Categoría</span>
-          </p>
-          <h2 id="examTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-          <p class="text-xs text-slate-400 mb-2">Haz clic en el mapa para registrar tu respuesta.</p>
-        </div>
-      </div>
-
-      <!-- MODE 5: GEOGUESSR EXTREMO -->
-      <div id="panelGeoguesser" class="p-4 hidden flex-col gap-3">
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-rose-500/40 flex justify-between items-center shadow-lg">
-          <div>
-            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-crosshairs"></i> GeoGuessr 🔥
-            </span>
-            <p class="text-xs text-slate-400 mt-0.5">Físico + Político</p>
-          </div>
-          <div class="text-right">
-            <div class="text-xs font-bold text-amber-400 flex items-center justify-end gap-1">
-              <i class="fa-solid fa-fire"></i> Racha: <span id="ggStreak" class="text-sm text-white">0</span>
+        <!-- MODE 1: ESTUDIO -->
+        <div id="panelStudy" class="p-4 flex flex-col gap-3">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-compass"></i> Modo Estudio (Físico + Político)
+              </span>
+              <span id="studyTotalBadge" class="text-[11px] font-semibold bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full border border-sky-500/20">0 Elementos</span>
             </div>
-            <div class="text-[11px] font-bold text-emerald-400 flex items-center justify-end gap-1 mt-0.5">
-              <i class="fa-solid fa-star"></i> Pts: <span id="ggScore" class="text-xs text-white">0</span>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Explora todo el mapa combinado. El guardado está deshabilitado en este modo.
+            </p>
+          </div>
+
+          <div id="studySearchContainer" class="relative">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">🔍 Buscar / Ir a...</label>
+            <div class="relative">
+              <input type="text" id="searchInput" placeholder="Escribe para buscar..." oninput="renderStudyList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-8 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
             </div>
           </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Filtrar por Categoría:</label>
+            <select id="categoryFilter" onchange="renderStudyList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <option value="ALL">Todas las Categorías</option>
+            </select>
+          </div>
+
+          <div class="flex-1 min-h-[160px] max-h-[300px] md:max-h-[calc(100vh-340px)] overflow-y-auto space-y-1.5 pr-1" id="studyItemsList"></div>
         </div>
 
-        <div id="ggQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/40 rounded-xl p-4 shadow-lg">
+        <!-- MODE 2: PRÁCTICA -->
+        <div id="panelPractice" class="p-4 hidden flex-col gap-3">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center">
+            <div>
+              <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-bullseye"></i> Modo Práctica
+              </span>
+              <p class="text-xs text-slate-400 mt-0.5">+10 acierto / -10 fallo</p>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-bold text-emerald-400 flex items-center justify-end gap-1">
+                <i class="fa-solid fa-star"></i> Puntos: <span id="practiceScore" class="text-sm text-white">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="practiceQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-sky-500/30 rounded-xl p-4 shadow-lg">
+            <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
+              <span>¿DÓNDE SE ENCUENTRA?</span>
+              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
+            </p>
+            <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
+            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
+            <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
+              <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
+            </button>
+          </div>
+        </div>
+
+        <!-- MODE 3: CLASE -->
+        <div id="panelClass" class="p-4 hidden flex-col gap-3">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-chalkboard-user"></i> Modo Clase (5 Preguntas)
+              </span>
+              <p class="text-xs text-slate-400" id="classProgress">Pregunta 1 de 5</p>
+            </div>
+          </div>
+
+          <div id="classQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-xl p-4 shadow-lg">
+            <p class="text-xs font-semibold text-emerald-400 mb-1 flex items-center justify-between">
+              <span>¿DÓNDE SE ENCUENTRA?</span>
+              <span id="classCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300">Categoría</span>
+            </p>
+            <h2 id="classTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
+            <p class="text-xs text-slate-400 mb-2">Haz clic en la ubicación correspondiente.</p>
+          </div>
+        </div>
+
+        <!-- MODE 4: EXAMEN -->
+        <div id="panelExam" class="p-4 hidden flex-col gap-3">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-graduation-cap"></i> Modo Examen (30 Preguntas)
+              </span>
+              <p class="text-xs text-slate-400" id="examProgress">Pregunta 1 de 30</p>
+            </div>
+          </div>
+
+          <div id="examQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-rose-500/30 rounded-xl p-4 shadow-lg">
+            <p class="text-xs font-semibold text-rose-400 mb-1 flex items-center justify-between">
+              <span>¿DÓNDE SE ENCUENTRA?</span>
+              <span id="examCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300">Categoría</span>
+            </p>
+            <h2 id="examTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
+            <p class="text-xs text-slate-400 mb-2">Haz clic en el mapa para registrar tu respuesta.</p>
+          </div>
+        </div>
+
+        <!-- MODE 5: GEOGUESSR EXTREMO -->
+        <div id="panelGeoguesser" class="p-4 hidden flex-col gap-3">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-rose-500/40 flex justify-between items-center shadow-lg">
+            <div>
+              <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-crosshairs"></i> GeoGuessr 🔥
+              </span>
+              <p class="text-xs text-slate-400 mt-0.5">Físico + Político unidos</p>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-bold text-amber-400 flex items-center justify-end gap-1">
+                <i class="fa-solid fa-fire"></i> Racha: <span id="ggStreak" class="text-sm text-white">0</span>
+              </div>
+              <div class="text-[11px] font-bold text-emerald-400 flex items-center justify-end gap-1 mt-0.5">
+                <i class="fa-solid fa-star"></i> Pts: <span id="ggScore" class="text-xs text-white">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="ggQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/40 rounded-xl p-4 shadow-lg">
+            <p class="text-xs font-semibold text-amber-400 mb-1 flex items-center justify-between">
+              <span>UBICA EXACTAMENTE:</span>
+              <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
+            </p>
+            <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
+            <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
+            <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
+            <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
+              Confirmar Ubicación 🎯
+            </button>
+            <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+              Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Leaflet Map Canvas -->
+      <main class="flex-1 relative h-full w-full bg-slate-950">
+        <div id="map" class="h-full w-full z-0"></div>
+        
+        <!-- Botón flotante rápido para ocultar/mostrar panel en móvil -->
+        <button onclick="toggleMobileSidebar()" class="md:hidden absolute top-3 left-3 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-2 rounded-xl text-xs text-white shadow-xl flex items-center gap-1.5">
+          <i class="fa-solid fa-bars"></i> <span>Panel</span>
+        </button>
+
+        <div class="absolute bottom-4 right-4 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] text-slate-300 shadow-xl flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>@manzana</span>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal Guardar Puntuación -->
+    <div id="saveScoreModal" class="modal">
+      <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
+        <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
+        <p class="text-xs text-slate-300 mb-4">Puntuación / Media actual: <span id="finalScoreDisplay" class="font-bold text-white">0</span></p>
+        <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
+        <div class="flex gap-2">
+          <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
+          <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver Tier List Global -->
+    <div id="tierListModal" class="modal">
+      <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-11/12 max-w-2xl shadow-2xl tier-container">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-extrabold text-indigo-400 flex items-center gap-2">
+            <i class="fa-solid fa-trophy"></i> Tabla de Clasificación Global
+          </h2>
+          <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas). Se muestra el mejor récord por estudiante.</p>
+        
+        <!-- Selectores Duales (Mapa + Modo de Juego) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Mapamundi (Físico / Político):</label>
+            <select id="tierDatasetFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="world_phys">Mapamundi Físico</option>
+              <option value="world_pol">Mapamundi Político</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Modo de Juego:</label>
+            <select id="tierModeFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="practice">Práctica</option>
+              <option value="class">Clase (5)</option>
+              <option value="exam">Examen (30)</option>
+              <option value="geoguesser">GeoGuessr Extremo 🔥</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tier-row tier-s">
+          <span class="tier-label">S</span>
+          <div id="tierS" class="tier-items"></div>
+        </div>
+        <div class="tier-row tier-a">
+          <span class="tier-label">A</span>
+          <div id="tierA" class="tier-items"></div>
+        </div>
+        <div class="tier-row tier-b">
+          <span class="tier-label">B</span>
+          <div id="tierB" class="tier-items"></div>
+        </div>
+        <div class="tier-row tier-c">
+          <span class="tier-label">C</span>
+          <div id="tierC" class="tier-items"></div>
+        </div>
+        <div class="tier-row tier-d">
+          <span class="tier-label">D</span>
+          <div id="tierD" class="tier-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // URL DE GOOGLE APPS SCRIPT
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
+
+      // BASE DE DATOS COMPLETA DE GEOGRAFÍA (FÍSICO Y POLÍTICO)
+      const DATASETS = {
+        world_phys: {
+          title: "Mapamundi Físico",
+          center: [20, 0],
+          zoom: 2,
+          items: [
+            // CORDILLERAS Y PICOS
+            { name: "Cordillera de los Alpes", cat: "Cordilleras", lat: 46.88, lng: 9.65 },
+            { name: "Montes Escandinavos", cat: "Cordilleras", lat: 62.00, lng: 9.50 },
+            { name: "Cordillera del Cáucaso", cat: "Cordilleras", lat: 42.65, lng: 44.27 },
+            { name: "Montes Urales", cat: "Cordilleras", lat: 60.00, lng: 60.00 },
+            { name: "Cordillera del Himalaya", cat: "Cordilleras", lat: 28.00, lng: 84.00 },
+            { name: "Cordillera Divisoria", cat: "Cordilleras", lat: -25.00, lng: 147.00 },
+            { name: "Cordillera de los Andes", cat: "Cordilleras", lat: -21.00, lng: -68.00 },
+            { name: "Montañas Rocosas", cat: "Cordilleras", lat: 39.00, lng: -105.50 },
+            { name: "Sierra Madre", cat: "Cordilleras", lat: 24.00, lng: -102.00 },
+            { name: "Montes Apalaches", cat: "Cordilleras", lat: 37.50, lng: -80.00 },
+            { name: "Cordillera del Atlas", cat: "Cordilleras", lat: 31.50, lng: -6.00 },
+            { name: "Everest", cat: "Picos", lat: 27.9881, lng: 86.9250 },
+            { name: "Mont Blanc", cat: "Picos", lat: 45.8326, lng: 6.8652 },
+            { name: "Elbrus", cat: "Picos", lat: 43.3499, lng: 42.4453 },
+            { name: "Kilimanjaro", cat: "Picos", lat: -3.0674, lng: 37.3556 },
+            { name: "Aconcagua", cat: "Picos", lat: -32.6532, lng: -70.0109 },
+            { name: "Mont McKinley (Denali)", cat: "Picos", lat: 63.0692, lng: -151.0070 },
+
+            // MESETAS, LLANURAS Y DESIERTOS
+            { name: "Meseta del Irán", cat: "Mesetas y Macizos", lat: 32.00, lng: 53.00 },
+            { name: "Meseta de Siberia Central", cat: "Mesetas y Macizos", lat: 65.00, lng: 100.00 },
+            { name: "Meseta del Tibet", cat: "Mesetas y Macizos", lat: 33.00, lng: 88.00 },
+            { name: "Macizo o Meseta Etiópico", cat: "Mesetas y Macizos", lat: 9.00, lng: 39.00 },
+            { name: "Meseta del Mato Grosso", cat: "Mesetas y Macizos", lat: -14.00, lng: -56.00 },
+            { name: "Escudo Canadiense", cat: "Mesetas y Macizos", lat: 54.00, lng: -80.00 },
+            { name: "Gran Llanura Europea", cat: "Llanuras y Desiertos", lat: 52.00, lng: 18.00 },
+            { name: "Llanura Rusa (ó Europa Oriental)", cat: "Llanuras y Desiertos", lat: 55.00, lng: 40.00 },
+            { name: "Llanura de Siberia Occ.", cat: "Llanuras y Desiertos", lat: 60.00, lng: 75.00 },
+            { name: "Desierto Arábigo", cat: "Llanuras y Desiertos", lat: 23.00, lng: 46.00 },
+            { name: "Desierto de Gobi", cat: "Llanuras y Desiertos", lat: 42.50, lng: 103.00 },
+            { name: "Gran Desierto Victoria", cat: "Llanuras y Desiertos", lat: -29.10, lng: 129.20 },
+            { name: "Desierto del Sahara", cat: "Llanuras y Desiertos", lat: 23.00, lng: 12.00 },
+            { name: "Desierto del Kalahari", cat: "Llanuras y Desiertos", lat: -23.00, lng: 22.00 },
+            { name: "Desierto de Atacama", cat: "Llanuras y Desiertos", lat: -23.50, lng: -69.00 },
+            { name: "Cuenca del Congo", cat: "Llanuras y Desiertos", lat: -1.00, lng: 22.00 },
+            { name: "Llanura de la Pampa", cat: "Llanuras y Desiertos", lat: -35.00, lng: -62.00 },
+            { name: "Llanura de la Patagonia", cat: "Llanuras y Desiertos", lat: -45.00, lng: -69.00 },
+            { name: "Llanura Amazónica", cat: "Llanuras y Desiertos", lat: -3.00, lng: -62.00 },
+
+            // PENÍNSULAS E ISLAS
+            { name: "Ibérica", cat: "Penínsulas", lat: 40.00, lng: -4.00 },
+            { name: "Escandinava", cat: "Penínsulas", lat: 61.00, lng: 15.00 },
+            { name: "Balcánica", cat: "Penínsulas", lat: 42.00, lng: 22.00 },
+            { name: "Arábiga", cat: "Penínsulas", lat: 23.00, lng: 47.00 },
+            { name: "del Indostán", cat: "Penínsulas", lat: 20.00, lng: 78.00 },
+            { name: "de Indochina", cat: "Penínsulas", lat: 15.00, lng: 101.00 },
+            { name: "de Corea", cat: "Penínsulas", lat: 37.50, lng: 127.00 },
+            { name: "de Somalia", cat: "Penínsulas", lat: 6.00, lng: 47.00 },
+            { name: "de Labrador", cat: "Penínsulas", lat: 54.00, lng: -66.00 },
+            { name: "Gran Bretaña", cat: "Islas y Archipiélagos", lat: 54.00, lng: -2.00 },
+            { name: "Islandia", cat: "Islas y Archipiélagos", lat: 64.90, lng: -18.50 },
+            { name: "Archipiélago del Japón", cat: "Islas y Archipiélagos", lat: 36.20, lng: 138.20 },
+            { name: "Archipiélago de Filipinas", cat: "Islas y Archipiélagos", lat: 12.80, lng: 121.70 },
+            { name: "Borneo", cat: "Islas y Archipiélagos", lat: 1.00, lng: 114.00 },
+            { name: "Sumatra", cat: "Islas y Archipiélagos", lat: 0.00, lng: 102.00 },
+            { name: "Java", cat: "Islas y Archipiélagos", lat: -7.50, lng: 110.00 },
+            { name: "Nueva Zelanda", cat: "Islas y Archipiélagos", lat: -41.00, lng: 174.00 },
+            { name: "Nueva Guinea", cat: "Islas y Archipiélagos", lat: -5.00, lng: 140.00 },
+            { name: "Madagascar", cat: "Islas y Archipiélagos", lat: -19.00, lng: 47.00 },
+            { name: "Cuba", cat: "Islas y Archipiélagos", lat: 21.50, lng: -79.50 },
+            { name: "Groenlandia", cat: "Islas y Archipiélagos", lat: 72.00, lng: -40.00 },
+            { name: "Islas Antillas", cat: "Islas y Archipiélagos", lat: 18.00, lng: -68.00 },
+
+            // CABOS, ESTRECHOS, OCÉANOS, MARES Y RÍOS
+            { name: "Cabo de Buena Esperanza", cat: "Cabos y Estrechos", lat: -34.35, lng: 18.47 },
+            { name: "Cabo de Hornos", cat: "Cabos y Estrechos", lat: -55.98, lng: -67.27 },
+            { name: "Estrecho de Gibraltar", cat: "Cabos y Estrechos", lat: 35.96, lng: -5.60 },
+            { name: "Estrecho de Bering", cat: "Cabos y Estrechos", lat: 65.80, lng: -168.90 },
+            { name: "Canal de Panamá", cat: "Cabos y Estrechos", lat: 9.08, lng: -79.68 },
+            { name: "Canal de Suez", cat: "Cabos y Estrechos", lat: 30.58, lng: 32.34 },
+            { name: "Golfo Pérsico", cat: "Cabos y Estrechos", lat: 27.00, lng: 51.00 },
+            { name: "Golfo de Bengala", cat: "Cabos y Estrechos", lat: 15.00, lng: 88.00 },
+            { name: "Golfo de Guinea", cat: "Cabos y Estrechos", lat: 1.00, lng: 2.00 },
+            { name: "Golfo de México", cat: "Cabos y Estrechos", lat: 25.00, lng: -90.00 },
+            { name: "Atlántico", cat: "Océanos", lat: 25.00, lng: -40.00 },
+            { name: "Pacífico", cat: "Océanos", lat: 0.00, lng: -160.00 },
+            { name: "Índico", cat: "Océanos", lat: -20.00, lng: 80.00 },
+            { name: "Glacial Ártico", cat: "Océanos", lat: 82.00, lng: 0.00 },
+            { name: "Glacial Antártico", cat: "Océanos", lat: -65.00, lng: 0.00 },
+            { name: "del Coral", cat: "Mares", lat: -18.00, lng: 152.00 },
+            { name: "Arábigo", cat: "Mares", lat: 15.00, lng: 65.00 },
+            { name: "de la China Meridional", cat: "Mares", lat: 12.00, lng: 113.00 },
+            { name: "Caribe o de las Antillas", cat: "Mares", lat: 15.00, lng: -75.00 },
+            { name: "Mediterráneo", cat: "Mares", lat: 35.00, lng: 18.00 },
+            { name: "de Noruega", cat: "Mares", lat: 68.00, lng: 2.00 },
+            { name: "del Japón", cat: "Mares", lat: 40.00, lng: 135.00 },
+            { name: "del Norte", cat: "Mares", lat: 56.00, lng: 3.00 },
+            { name: "Negro", cat: "Mares", lat: 43.00, lng: 35.00 },
+            { name: "Rojo", cat: "Mares", lat: 20.00, lng: 38.00 },
+            { name: "Amazonas", cat: "Ríos", lat: -3.46, lng: -62.21 },
+            { name: "Mississippi-Missouri", cat: "Ríos", lat: 37.00, lng: -89.00 },
+            { name: "Paraná", cat: "Ríos", lat: -27.50, lng: -58.80 },
+            { name: "Orinoco", cat: "Ríos", lat: 8.00, lng: -63.00 },
+            { name: "Yang-Tseu-Kiang (Chang Jiang o Azul)", cat: "Ríos", lat: 30.50, lng: 114.30 },
+            { name: "Yenisei", cat: "Ríos", lat: 61.00, lng: 90.00 },
+            { name: "Obi", cat: "Ríos", lat: 61.00, lng: 69.00 },
+            { name: "Indo", cat: "Ríos", lat: 26.00, lng: 68.00 },
+            { name: "Hoang-he o Amarillo", cat: "Ríos", lat: 36.00, lng: 110.00 },
+            { name: "Lena", cat: "Ríos", lat: 62.00, lng: 129.00 },
+            { name: "Mekong", cat: "Ríos", lat: 16.00, lng: 105.00 },
+            { name: "Ganges", cat: "Ríos", lat: 25.00, lng: 83.00 },
+            { name: "Níger", cat: "Ríos", lat: 13.00, lng: 2.00 },
+            { name: "Nilo", cat: "Ríos", lat: 26.82, lng: 30.80 },
+            { name: "Congo", cat: "Ríos", lat: -2.00, lng: 22.00 },
+            { name: "Zambeze", cat: "Ríos", lat: -15.00, lng: 28.00 },
+            { name: "Murray", cat: "Ríos", lat: -35.00, lng: 143.00 },
+            { name: "Volga", cat: "Ríos", lat: 53.00, lng: 48.00 },
+            { name: "Danubio", cat: "Ríos", lat: 45.00, lng: 20.00 },
+            { name: "Mar Caspio", cat: "Lagos", lat: 41.93, lng: 50.66 },
+            { name: "Superior", cat: "Lagos", lat: 47.70, lng: -87.50 },
+            { name: "Victoria", cat: "Lagos", lat: -1.00, lng: 33.00 },
+            { name: "Hurón", cat: "Lagos", lat: 44.80, lng: -82.40 },
+            { name: "Míchigan", cat: "Lagos", lat: 44.00, lng: -87.00 },
+            { name: "Tanganika", cat: "Lagos", lat: -6.00, lng: 29.50 },
+            { name: "Baikal", cat: "Lagos", lat: 53.50, lng: 108.00 },
+            { name: "Mar de Aral", cat: "Lagos", lat: 45.00, lng: 59.00 }
+          ]
+        },
+
+        world_pol: {
+          title: "Mapamundi Político",
+          center: [20, 0],
+          zoom: 2,
+          items: [
+            // ÁFRICA
+            { name: "Marruecos", cat: "País (África)", lat: 31.79, lng: -7.09 },
+            { name: "Argelia", cat: "País (África)", lat: 28.03, lng: 1.65 },
+            { name: "Libia", cat: "País (África)", lat: 26.33, lng: 17.22 },
+            { name: "Túnez", cat: "País (África)", lat: 33.88, lng: 9.53 },
+            { name: "Egipto", cat: "País (África)", lat: 26.82, lng: 30.80 },
+            { name: "Malí", cat: "País (África)", lat: 17.57, lng: -3.99 },
+            { name: "Chad", cat: "País (África)", lat: 15.45, lng: 18.73 },
+            { name: "Sudán", cat: "País (África)", lat: 12.86, lng: 30.21 },
+            { name: "Etiopía", cat: "País (África)", lat: 9.14, lng: 40.48 },
+            { name: "Senegal", cat: "País (África)", lat: 14.49, lng: -14.45 },
+            { name: "Ghana", cat: "País (África)", lat: 7.94, lng: -1.02 },
+            { name: "Costa de Marfil", cat: "País (África)", lat: 7.53, lng: -5.54 },
+            { name: "Nigeria", cat: "País (África)", lat: 9.08, lng: 8.67 },
+            { name: "Congo o Zaire", cat: "País (África)", lat: -4.03, lng: 21.75 },
+            { name: "Camerún", cat: "País (África)", lat: 7.36, lng: 12.35 },
+            { name: "Kenya", cat: "País (África)", lat: 0.02, lng: 37.90 },
+            { name: "Tanzania", cat: "País (África)", lat: -6.36, lng: 34.88 },
+            { name: "Angola", cat: "País (África)", lat: -11.20, lng: 17.87 },
+            { name: "Mozambique", cat: "País (África)", lat: -18.66, lng: 35.52 },
+            { name: "Sudáfrica", cat: "País (África)", lat: -30.55, lng: 22.93 },
+            { name: "Madagascar", cat: "País (África)", lat: -18.76, lng: 46.86 },
+
+            // AMÉRICA
+            { name: "Canadá", cat: "País (América)", lat: 56.13, lng: -106.34 },
+            { name: "Estados Unidos", cat: "País (América)", lat: 37.09, lng: -95.71 },
+            { name: "México", cat: "País (América)", lat: 23.63, lng: -102.55 },
+            { name: "Guatemala", cat: "País (América)", lat: 15.78, lng: -90.23 },
+            { name: "Cuba", cat: "País (América)", lat: 21.52, lng: -77.78 },
+            { name: "Colombia", cat: "País (América)", lat: 4.57, lng: -74.29 },
+            { name: "Venezuela", cat: "País (América)", lat: 6.42, lng: -66.58 },
+            { name: "Perú", cat: "País (América)", lat: -9.19, lng: -75.01 },
+            { name: "Ecuador", cat: "País (América)", lat: -1.83, lng: -78.18 },
+            { name: "Chile", cat: "País (América)", lat: -35.67, lng: -71.54 },
+            { name: "Brasil", cat: "País (América)", lat: -14.23, lng: -51.92 },
+            { name: "Argentina", cat: "País (América)", lat: -38.41, lng: -63.61 },
+            { name: "Paraguay", cat: "País (América)", lat: -23.44, lng: -58.44 },
+            { name: "Bolivia", cat: "País (América)", lat: -16.29, lng: -63.58 },
+
+            // ASIA
+            { name: "Turquía", cat: "País (Asia)", lat: 38.96, lng: 35.24 },
+            { name: "Siria", cat: "País (Asia)", lat: 34.80, lng: 38.99 },
+            { name: "Israel", cat: "País (Asia)", lat: 31.04, lng: 34.85 },
+            { name: "Irak", cat: "País (Asia)", lat: 33.22, lng: 43.67 },
+            { name: "Arabia Saudí", cat: "País (Asia)", lat: 23.88, lng: 45.07 },
+            { name: "Emiratos Árabes", cat: "País (Asia)", lat: 23.42, lng: 53.84 },
+            { name: "Irán", cat: "País (Asia)", lat: 32.42, lng: 53.68 },
+            { name: "Pakistán", cat: "País (Asia)", lat: 30.37, lng: 69.34 },
+            { name: "India", cat: "País (Asia)", lat: 20.59, lng: 78.96 },
+            { name: "Bangladesh", cat: "País (Asia)", lat: 23.68, lng: 90.35 },
+            { name: "Tailandia", cat: "País (Asia)", lat: 15.87, lng: 100.99 },
+            { name: "Malasia", cat: "País (Asia)", lat: 4.21, lng: 101.97 },
+            { name: "Indonesia", cat: "País (Asia)", lat: -0.78, lng: 113.92 },
+            { name: "Filipinas", cat: "País (Asia)", lat: 12.87, lng: 121.77 },
+            { name: "China", cat: "País (Asia)", lat: 35.86, lng: 104.19 },
+            { name: "Taiwan", cat: "País (Asia)", lat: 23.69, lng: 120.96 },
+            { name: "Corea del Sur", cat: "País (Asia)", lat: 35.90, lng: 127.76 },
+            { name: "Japón", cat: "País (Asia)", lat: 36.20, lng: 138.25 },
+            { name: "Mongolia", cat: "País (Asia)", lat: 46.86, lng: 103.84 },
+            { name: "Uzbekistán", cat: "País (Asia)", lat: 41.37, lng: 64.58 },
+            { name: "Kazajstán", cat: "País (Asia)", lat: 48.01, lng: 66.92 },
+
+            // EUROPA Y OCEANÍA
+            { name: "España", cat: "País (Europa)", lat: 40.46, lng: -3.74 },
+            { name: "Italia", cat: "País (Europa)", lat: 41.87, lng: 12.56 },
+            { name: "Francia", cat: "País (Europa)", lat: 46.22, lng: 2.21 },
+            { name: "Grecia", cat: "País (Europa)", lat: 39.07, lng: 21.82 },
+            { name: "Gran Bretaña", cat: "País (Europa)", lat: 55.37, lng: -3.43 },
+            { name: "Países Bajos", cat: "País (Europa)", lat: 52.13, lng: 5.29 },
+            { name: "Alemania", cat: "País (Europa)", lat: 51.16, lng: 10.45 },
+            { name: "Suecia", cat: "País (Europa)", lat: 60.12, lng: 18.64 },
+            { name: "Suiza", cat: "País (Europa)", lat: 46.81, lng: 8.22 },
+            { name: "Polonia", cat: "País (Europa)", lat: 51.91, lng: 19.14 },
+            { name: "Rumania", cat: "País (Europa)", lat: 45.94, lng: 24.96 },
+            { name: "Rusia", cat: "País (Europa)", lat: 61.52, lng: 105.31 },
+            { name: "Ucrania", cat: "País (Europa)", lat: 48.37, lng: 31.16 },
+            { name: "Australia", cat: "País (Oceanía)", lat: -25.27, lng: 133.77 },
+            { name: "Nueva Zelanda", cat: "País (Oceanía)", lat: -40.90, lng: 174.88 },
+            { name: "Papúa-Nueva Guinea", cat: "País (Oceanía)", lat: -6.31, lng: 143.95 },
+            { name: "Fidji/Fiji", cat: "País (Oceanía)", lat: -17.71, lng: 178.06 },
+
+            // CIUDADES
+            { name: "Toronto", cat: "Ciudad", lat: 43.65, lng: -79.38 },
+            { name: "Nueva York", cat: "Ciudad", lat: 40.71, lng: -74.00 },
+            { name: "Chicago", cat: "Ciudad", lat: 41.87, lng: -87.62 },
+            { name: "Los Ángeles", cat: "Ciudad", lat: 34.05, lng: -118.24 },
+            { name: "San Francisco", cat: "Ciudad", lat: 37.77, lng: -122.41 },
+            { name: "Ciudad de México", cat: "Ciudad", lat: 19.43, lng: -99.13 },
+            { name: "Bogotá", cat: "Ciudad", lat: 4.71, lng: -74.07 },
+            { name: "Lima", cat: "Ciudad", lat: -12.04, lng: -77.04 },
+            { name: "Santiago de Chile", cat: "Ciudad", lat: -33.44, lng: -70.66 },
+            { name: "Buenos Aires", cat: "Ciudad", lat: -34.60, lng: -58.38 },
+            { name: "Sao Paulo", cat: "Ciudad", lat: -23.55, lng: -46.63 },
+            { name: "Río de Janeiro", cat: "Ciudad", lat: -22.90, lng: -43.17 },
+            { name: "El Cairo", cat: "Ciudad", lat: 30.04, lng: 31.23 },
+            { name: "Casablanca", cat: "Ciudad", lat: 33.57, lng: -7.58 },
+            { name: "Lagos", cat: "Ciudad", lat: 6.52, lng: 3.37 },
+            { name: "Kinshasa", cat: "Ciudad", lat: -4.44, lng: 15.26 },
+            { name: "Johannesburg", cat: "Ciudad", lat: -26.20, lng: 28.04 },
+            { name: "Estambul", cat: "Ciudad", lat: 41.00, lng: 28.97 },
+            { name: "Teherán", cat: "Ciudad", lat: 35.68, lng: 51.38 },
+            { name: "Karachi", cat: "Ciudad", lat: 24.86, lng: 67.00 },
+            { name: "Bombay", cat: "Ciudad", lat: 19.07, lng: 72.87 },
+            { name: "Calcuta", cat: "Ciudad", lat: 22.57, lng: 88.36 },
+            { name: "Yakarta", cat: "Ciudad", lat: -6.20, lng: 106.84 },
+            { name: "Bangkok", cat: "Ciudad", lat: 13.75, lng: 100.50 },
+            { name: "Singapour", cat: "Ciudad", lat: 1.35, lng: 103.81 },
+            { name: "Seul", cat: "Ciudad", lat: 37.56, lng: 126.97 },
+            { name: "Shanghai", cat: "Ciudad", lat: 31.23, lng: 121.47 },
+            { name: "Hong Kong", cat: "Ciudad", lat: 22.31, lng: 114.16 },
+            { name: "Pekin o Beijing", cat: "Ciudad", lat: 39.90, lng: 116.40 },
+            { name: "Tokyo", cat: "Ciudad", lat: 35.67, lng: 139.65 },
+            { name: "Sidney", cat: "Ciudad", lat: -33.86, lng: 151.20 },
+            { name: "París", cat: "Ciudad", lat: 48.85, lng: 2.35 },
+            { name: "Londres", cat: "Ciudad", lat: 51.50, lng: -0.12 },
+            { name: "Berlín", cat: "Ciudad", lat: 52.52, lng: 13.40 },
+            { name: "Moscú", cat: "Ciudad", lat: 55.75, lng: 37.61 },
+            { name: "San Petersburgo", cat: "Ciudad", lat: 59.93, lng: 30.36 },
+            { name: "Roma", cat: "Ciudad", lat: 41.90, lng: 12.49 },
+            { name: "Atenas", cat: "Ciudad", lat: 37.98, lng: 23.72 }
+          ]
+        }
+      };
+
+      let map = null;
+      let markersLayer = null;
+      let currentDatasetKey = 'world_phys';
+      let currentMode = 'study';
+      let currentQuestionItem = null;
+
+      let practiceScore = 0;
+      let practiceHits = 0;
+      let practiceTotal = 0;
+
+      let quizHits = 0;
+      let quizIndex = 0;
+      let quizQuestions = [];
+
+      // GeoGuessr variables
+      let ggScore = 0;
+      let ggStreak = 0;
+      let ggRound = 0;
+      let ggTotalRounds = 10;
+      let ggCurrentPool = [];
+      let ggWaitingForNext = false;
+      let ggLineLayer = null;
+      let ggSelectedLatLng = null;
+      let ggTempMarker = null;
+
+      let audioCtx = null;
+      let isMuted = false;
+
+      function playAudio(type) {
+        if (isMuted) return;
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          if (type === 'correct') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.08);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+          } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.setValueAtTime(174.61, now + 0.1);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+          }
+        } catch(e){}
+      }
+
+      function toggleMute() {
+        isMuted = !isMuted;
+        document.getElementById('muteIcon').className = isMuted ? 
+          'fa-solid fa-volume-xmark text-xs text-rose-400' : 
+          'fa-solid fa-volume-high text-xs text-slate-300';
+      }
+
+      function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('-translate-x-full');
+      }
+
+      function showToast(message, type) {
+        const toast = document.getElementById('toastNotification');
+        if (!toast) return;
+        toast.innerText = message;
+        if (type === 'correct') {
+          toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white border border-emerald-400 shadow-emerald-900/50";
+        } else {
+          toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-rose-600 text-white border border-rose-400 shadow-rose-900/50";
+        }
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 2200);
+      }
+
+      function initMap() {
+        map = L.map('map', { zoomControl: true }).setView(DATASETS[currentDatasetKey].center, DATASETS[currentDatasetKey].zoom);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=cb1_3u0c_1_039ef37ceffae3a2c3aced0b', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19
+        }).addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+        
+        const datasetSelect = document.getElementById('datasetSelect');
+        datasetSelect.disabled = true;
+        datasetSelect.className = "bg-slate-900 text-slate-500 border border-slate-700/50 rounded-lg px-2 py-1.5 text-xs font-medium cursor-not-allowed opacity-60 shadow-inner";
+
+        loadSelectedDataset();
+      }
+
+      function getActiveItems() {
+        if (currentMode === 'study' || currentMode === 'geoguesser') {
+          const mapItems = new Map();
+          [...DATASETS.world_phys.items, ...DATASETS.world_pol.items].forEach(item => {
+            mapItems.set(item.name, item);
+          });
+          return Array.from(mapItems.values());
+        } else {
+          return DATASETS[currentDatasetKey].items;
+        }
+      }
+
+      function loadSelectedDataset() {
+        currentDatasetKey = document.getElementById('datasetSelect').value;
+        const ds = DATASETS[currentDatasetKey];
+        
+        map.setView(ds.center, ds.zoom);
+        populateCategories();
+        
+        if (currentMode === 'study') {
+          renderStudyList();
+        } else if (currentMode !== 'geoguesser') {
+          startQuizMode();
+        }
+      }
+
+      function switchMode(mode) {
+        currentMode = mode;
+        
+        document.getElementById('panelStudy').classList.toggle('hidden', mode !== 'study');
+        document.getElementById('panelPractice').classList.toggle('hidden', mode !== 'practice');
+        document.getElementById('panelClass').classList.toggle('hidden', mode !== 'class');
+        document.getElementById('panelExam').classList.toggle('hidden', mode !== 'exam');
+        document.getElementById('panelGeoguesser').classList.toggle('hidden', mode !== 'geoguesser');
+
+        const datasetSelect = document.getElementById('datasetSelect');
+        if (mode === 'study' || mode === 'geoguesser') {
+          datasetSelect.disabled = true;
+          datasetSelect.className = "bg-slate-900 text-slate-500 border border-slate-700/50 rounded-lg px-2 py-1.5 text-xs font-medium cursor-not-allowed opacity-60 shadow-inner";
+        } else {
+          datasetSelect.disabled = false;
+          datasetSelect.className = "bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-inner";
+        }
+
+        const btnMap = { study: 'modeStudyBtn', practice: 'modePracticeBtn', class: 'modeClassBtn', exam: 'modeExamBtn', geoguesser: 'modeGeoguesserBtn' };
+        Object.keys(btnMap).forEach(m => {
+          const btn = document.getElementById(btnMap[m]);
+          if (m === mode) {
+            if (m === 'geoguesser') {
+              btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow ring-2 ring-amber-400 whitespace-nowrap";
+            } else {
+              btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap";
+            }
+          } else {
+            if (m === 'geoguesser') {
+              btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600/60 to-rose-600/60 whitespace-nowrap";
+            } else {
+              btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap";
+            }
+          }
+        });
+
+        if (window.innerWidth < 768) {
+          document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+
+        populateCategories();
+
+        if (mode === 'study') {
+          map.off('click', onGeoGuessrMapClick);
+          renderStudyList();
+        } else if (mode === 'geoguesser') {
+          startGeoGuessrMode();
+        } else {
+          map.off('click', onGeoGuessrMapClick);
+          startQuizMode();
+        }
+      }
+
+      function populateCategories() {
+        const catSelect = document.getElementById('categoryFilter');
+        const items = getActiveItems();
+        const categories = ['ALL', ...new Set(items.map(i => i.cat))];
+        
+        catSelect.innerHTML = categories.map(c => 
+          `<option value="${c}">${c === 'ALL' ? 'Todas las Categorías' : c}</option>`
+        ).join('');
+      }
+
+      function renderStudyList() {
+        markersLayer.clearLayers();
+        const items = getActiveItems();
+        const catFilter = document.getElementById('categoryFilter').value;
+        const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+        const container = document.getElementById('studyItemsList');
+        container.innerHTML = '';
+
+        let count = 0;
+        items.forEach(item => {
+          if ((catFilter === 'ALL' || item.cat === catFilter) && item.name.toLowerCase().includes(searchQuery)) {
+            count++;
+            const marker = L.circleMarker([item.lat, item.lng], {
+              radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
+              color: '#0ea5e9',
+              fillColor: '#38bdf8',
+              fillOpacity: 0.85
+            }).addTo(markersLayer);
+            
+            marker.bindPopup(`<b>${item.name}</b><br><span class="text-xs text-slate-400">${item.cat}</span>`);
+
+            const div = document.createElement('div');
+            div.className = "p-2 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-sky-500/50 cursor-pointer transition flex items-center justify-between text-xs";
+            div.innerHTML = `<span>${item.name}</span><span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${item.cat}</span>`;
+            div.onclick = () => {
+              map.flyTo([item.lat, item.lng], 5);
+              marker.openPopup();
+              if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+              }
+            };
+            container.appendChild(div);
+          }
+        });
+
+        document.getElementById('studyTotalBadge').innerText = `${count} Elementos`;
+      }
+
+      function startQuizMode() {
+        const items = getActiveItems();
+        if (!items || items.length === 0) return;
+
+        quizHits = 0;
+        quizIndex = 0;
+
+        if (currentMode === 'practice') {
+          practiceScore = 0;
+          practiceHits = 0;
+          practiceTotal = 0;
+          document.getElementById('practiceScore').innerText = 0;
+          document.getElementById('practiceQuestionBox').innerHTML = `
+            <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
+              <span>¿DÓNDE SE ENCUENTRA?</span>
+              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
+            </p>
+            <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
+            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
+            <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
+              <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
+            </button>
+          `;
+        } else if (currentMode === 'class') {
+          quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, 5);
+        } else if (currentMode === 'exam') {
+          quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, Math.min(30, items.length));
+        }
+
+        nextQuestion();
+      }
+
+      function nextQuestion() {
+        markersLayer.clearLayers();
+        const items = getActiveItems();
+
+        if (currentMode === 'practice') {
+          currentQuestionItem = items[Math.floor(Math.random() * items.length)];
+          const targetEl = document.getElementById('practiceTargetName');
+          const badgeEl = document.getElementById('practiceCategoryBadge');
+          if (targetEl) targetEl.innerText = currentQuestionItem.name;
+          if (badgeEl) badgeEl.innerText = currentQuestionItem.cat;
+        } else if (currentMode === 'class') {
+          if (quizIndex >= quizQuestions.length) {
+            const mediaNota = ((quizHits / 5) * 10).toFixed(1);
+            document.getElementById('classQuestionBox').innerHTML = `
+              <div class="text-center py-2">
+                <i class="fa-solid fa-award text-emerald-400 text-3xl mb-2"></i>
+                <h3 class="text-sm font-bold text-white mb-1">¡Clase Finalizada!</h3>
+                <p class="text-xs text-slate-300 mb-3">Aciertos: <span class="font-bold text-emerald-400">${quizHits} / 5</span></p>
+                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
+                  <span class="text-xs text-slate-300 font-semibold">Media (Nota):</span>
+                  <span class="text-base font-extrabold text-amber-400">${mediaNota} / 10</span>
+                </div>
+                <button onclick="openSaveModalForScore(${quizHits})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
+                </button>
+              </div>
+            `;
+            return;
+          }
+          currentQuestionItem = quizQuestions[quizIndex];
+          document.getElementById('classTargetName').innerText = currentQuestionItem.name;
+          document.getElementById('classCategoryBadge').innerText = currentQuestionItem.cat;
+          document.getElementById('classProgress').innerText = `Pregunta ${quizIndex + 1} de 5`;
+        } else if (currentMode === 'exam') {
+          if (quizIndex >= quizQuestions.length) {
+            const total = quizQuestions.length;
+            const mediaNota = ((quizHits / total) * 10).toFixed(1);
+            document.getElementById('examQuestionBox').innerHTML = `
+              <div class="text-center py-2">
+                <i class="fa-solid fa-graduation-cap text-rose-400 text-3xl mb-2"></i>
+                <h3 class="text-sm font-bold text-white mb-1">¡Examen Finalizado!</h3>
+                <p class="text-xs text-slate-300 mb-3">Aciertos: <span class="font-bold text-rose-400">${quizHits} / ${total}</span></p>
+                <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
+                  <span class="text-xs text-slate-300 font-semibold">Media (Nota):</span>
+                  <span class="text-base font-extrabold text-amber-400">${mediaNota} / 10</span>
+                </div>
+                <button onclick="openSaveModalForScore(${quizHits})" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
+                </button>
+              </div>
+            `;
+            return;
+          }
+          currentQuestionItem = quizQuestions[quizIndex];
+          document.getElementById('examTargetName').innerText = currentQuestionItem.name;
+          document.getElementById('examCategoryBadge').innerText = currentQuestionItem.cat;
+          document.getElementById('examProgress').innerText = `Pregunta ${quizIndex + 1} de ${quizQuestions.length}`;
+        }
+
+        items.forEach(item => {
+          const marker = L.circleMarker([item.lat, item.lng], {
+            radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
+            color: '#ffffff',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.85
+          }).addTo(markersLayer);
+
+          marker.on('click', () => {
+            if (item.name === currentQuestionItem.name) {
+              playAudio('correct');
+              if (currentMode === 'practice') {
+                practiceScore += 10;
+                practiceHits++;
+                practiceTotal++;
+                document.getElementById('practiceScore').innerText = practiceScore;
+                showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
+                nextQuestion();
+              } else if (currentMode === 'class') {
+                quizHits++;
+                showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
+                quizIndex++;
+                nextQuestion();
+              } else if (currentMode === 'exam') {
+                quizHits++;
+                quizIndex++;
+                nextQuestion();
+              }
+            } else {
+              playAudio('wrong');
+              if (currentMode === 'practice') {
+                practiceScore -= 10;
+                practiceTotal++;
+                document.getElementById('practiceScore').innerText = practiceScore;
+                showToast(`❌ Incorrecto (-10 pts). Buscabas: ${currentQuestionItem.name}`, 'wrong');
+                nextQuestion();
+              } else if (currentMode === 'class') {
+                showToast(`❌ Incorrecto. Buscabas: ${currentQuestionItem.name}`, 'wrong');
+                quizIndex++;
+                nextQuestion();
+              } else if (currentMode === 'exam') {
+                quizIndex++;
+                nextQuestion();
+              }
+            }
+          });
+        });
+      }
+
+      function finishPractice() {
+        if (practiceTotal === 0) {
+          alert('¡Aún no has respondido ninguna pregunta en práctica!');
+          return;
+        }
+        const mediaPorcentaje = ((practiceHits / practiceTotal) * 100).toFixed(1);
+        document.getElementById('practiceQuestionBox').innerHTML = `
+          <div class="text-center py-2">
+            <i class="fa-solid fa-bullseye text-amber-400 text-3xl mb-2"></i>
+            <h3 class="text-sm font-bold text-white mb-1">¡Práctica Finalizada!</h3>
+            <p class="text-xs text-slate-300 mb-2">Puntos Totales: <span class="font-bold text-emerald-400">${practiceScore} pts</span></p>
+            <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
+              <span class="text-xs text-slate-300 font-semibold">Media (Aciertos):</span>
+              <span class="text-base font-extrabold text-amber-400">${mediaPorcentaje}% (${practiceHits}/${practiceTotal})</span>
+            </div>
+            <button onclick="openSaveModalForScore(${practiceScore})" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
+            </button>
+          </div>
+        `;
+        markersLayer.clearLayers();
+      }
+
+      // --- MODO GEOGUESSR EXTREMO ---
+      function startGeoGuessrMode() {
+        ggScore = 0;
+        ggStreak = 0;
+        ggRound = 0;
+        
+        const combinedItems = getActiveItems();
+        ggCurrentPool = combinedItems.sort(() => 0.5 - Math.random()).slice(0, 10);
+        
+        document.getElementById('ggScore').innerText = ggScore;
+        document.getElementById('ggStreak').innerText = ggStreak;
+        
+        document.getElementById('ggQuestionBox').innerHTML = `
           <p class="text-xs font-semibold text-amber-400 mb-1 flex items-center justify-between">
             <span>UBICA EXACTAMENTE:</span>
             <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
@@ -305,1032 +1083,309 @@
           <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
             Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
           </button>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- Leaflet Map Canvas -->
-    <main class="flex-1 relative h-full w-full bg-slate-950">
-      <div id="map" class="h-full w-full z-0"></div>
-      
-      <!-- Botón flotante rápido para ocultar/mostrar panel en móvil cuando se está jugando -->
-      <button onclick="toggleMobileSidebar()" class="md:hidden absolute top-3 left-3 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-2 rounded-xl text-xs text-white shadow-xl flex items-center gap-1.5">
-        <i class="fa-solid fa-bars"></i> <span>Panel</span>
-      </button>
-
-      <div class="absolute bottom-4 right-4 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] text-slate-300 shadow-xl flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>@manzana</span>
-      </div>
-    </main>
-  </div>
-
-  <!-- Modal Guardar Puntuación -->
-  <div id="saveScoreModal" class="modal">
-    <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-90 max-w-md shadow-2xl text-center">
-      <h3 class="text-lg font-extrabold text-emerald-400 mb-2">💾 Guardar en Tier List Global</h3>
-      <p class="text-xs text-slate-300 mb-4">Puntuación / Media actual: <span id="finalScoreDisplay" class="font-bold text-white">0</span></p>
-      <input type="text" id="playerName" placeholder="Tu nombre y clase (ej: Juan 4ºA)..." maxlength="25" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
-      <div class="flex gap-2">
-        <button onclick="submitScoreToCloud()" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition">Enviar a la Nube</button>
-        <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Ver Tier List Global -->
-  <div id="tierListModal" class="modal">
-    <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-11/12 max-w-2xl shadow-2xl tier-container">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-base font-extrabold text-indigo-400 flex items-center gap-2">
-          <i class="fa-solid fa-trophy"></i> Tabla de Clasificación Global
-        </h2>
-        <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas). Se muestra el mejor récord por estudiante.</p>
-      
-      <!-- Selectores Duales (Mapa + Modo de Juego = Listas Globales) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Mapamundi (Físico / Político):</label>
-          <select id="tierDatasetFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="world_phys">Mapamundi Físico</option>
-            <option value="world_pol">Mapamundi Político</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Modo de Juego:</label>
-          <select id="tierModeFilter" onchange="renderTierList()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="practice">Práctica</option>
-            <option value="class">Clase (5)</option>
-            <option value="exam">Examen (30)</option>
-            <option value="geoguesser">GeoGuessr Extremo 🔥</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="tier-row tier-s">
-        <span class="tier-label">S</span>
-        <div id="tierS" class="tier-items"></div>
-      </div>
-      <div class="tier-row tier-a">
-        <span class="tier-label">A</span>
-        <div id="tierA" class="tier-items"></div>
-      </div>
-      <div class="tier-row tier-b">
-        <span class="tier-label">B</span>
-        <div id="tierB" class="tier-items"></div>
-      </div>
-      <div class="tier-row tier-c">
-        <span class="tier-label">C</span>
-        <div id="tierC" class="tier-items"></div>
-      </div>
-      <div class="tier-row tier-d">
-        <span class="tier-label">D</span>
-        <div id="tierD" class="tier-items"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // URL DE GOOGLE APPS SCRIPT
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
-
-    // BASE DE DATOS COMPLETA DE GEOGRAFÍA
-    const DATASETS = {
-      world_phys: {
-        title: "Mapamundi Físico",
-        center: [20, 0],
-        zoom: 2,
-        items: [
-          // CORDILLERAS Y PICOS
-          { name: "Cordillera de los Alpes", cat: "Cordilleras", lat: 46.88, lng: 9.65 },
-          { name: "Montes Escandinavos", cat: "Cordilleras", lat: 62.00, lng: 9.50 },
-          { name: "Cordillera del Cáucaso", cat: "Cordilleras", lat: 42.65, lng: 44.27 },
-          { name: "Montes Urales", cat: "Cordilleras", lat: 60.00, lng: 60.00 },
-          { name: "Cordillera del Himalaya", cat: "Cordilleras", lat: 28.00, lng: 84.00 },
-          { name: "Cordillera Divisoria", cat: "Cordilleras", lat: -25.00, lng: 147.00 },
-          { name: "Cordillera de los Andes", cat: "Cordilleras", lat: -21.00, lng: -68.00 },
-          { name: "Montañas Rocosas", cat: "Cordilleras", lat: 39.00, lng: -105.50 },
-          { name: "Sierra Madre", cat: "Cordilleras", lat: 24.00, lng: -102.00 },
-          { name: "Montes Apalaches", cat: "Cordilleras", lat: 37.50, lng: -80.00 },
-          { name: "Cordillera del Atlas", cat: "Cordilleras", lat: 31.50, lng: -6.00 },
-          { name: "Everest", cat: "Picos", lat: 27.9881, lng: 86.9250 },
-          { name: "Mont Blanc", cat: "Picos", lat: 45.8326, lng: 6.8652 },
-          { name: "Elbrus", cat: "Picos", lat: 43.3499, lng: 42.4453 },
-          { name: "Kilimanjaro", cat: "Picos", lat: -3.0674, lng: 37.3556 },
-          { name: "Aconcagua", cat: "Picos", lat: -32.6532, lng: -70.0109 },
-          { name: "Mont McKinley (Denali)", cat: "Picos", lat: 63.0692, lng: -151.0070 },
-
-          // MESETAS, LLANURAS Y DESIERTOS
-          { name: "Meseta del Irán", cat: "Mesetas y Macizos", lat: 32.00, lng: 53.00 },
-          { name: "Meseta de Siberia Central", cat: "Mesetas y Macizos", lat: 65.00, lng: 100.00 },
-          { name: "Meseta del Tibet", cat: "Mesetas y Macizos", lat: 33.00, lng: 88.00 },
-          { name: "Macizo o Meseta Etiópico", cat: "Mesetas y Macizos", lat: 9.00, lng: 39.00 },
-          { name: "Meseta del Mato Grosso", cat: "Mesetas y Macizos", lat: -14.00, lng: -56.00 },
-          { name: "Escudo Canadiense", cat: "Mesetas y Macizos", lat: 54.00, lng: -80.00 },
-          { name: "Gran Llanura Europea", cat: "Llanuras y Desiertos", lat: 52.00, lng: 18.00 },
-          { name: "Llanura Rusa (ó Europa Oriental)", cat: "Llanuras y Desiertos", lat: 55.00, lng: 40.00 },
-          { name: "Llanura de Siberia Occ.", cat: "Llanuras y Desiertos", lat: 60.00, lng: 75.00 },
-          { name: "Desierto Arábigo", cat: "Llanuras y Desiertos", lat: 23.00, lng: 46.00 },
-          { name: "Desierto de Gobi", cat: "Llanuras y Desiertos", lat: 42.50, lng: 103.00 },
-          { name: "Gran Desierto Victoria", cat: "Llanuras y Desiertos", lat: -29.10, lng: 129.20 },
-          { name: "Desierto del Sahara", cat: "Llanuras y Desiertos", lat: 23.00, lng: 12.00 },
-          { name: "Desierto del Kalahari", cat: "Llanuras y Desiertos", lat: -23.00, lng: 22.00 },
-          { name: "Desierto de Atacama", cat: "Llanuras y Desiertos", lat: -23.50, lng: -69.00 },
-          { name: "Cuenca del Congo", cat: "Llanuras y Desiertos", lat: -1.00, lng: 22.00 },
-          { name: "Llanura de la Pampa", cat: "Llanuras y Desiertos", lat: -35.00, lng: -62.00 },
-          { name: "Llanura de la Patagonia", cat: "Llanuras y Desiertos", lat: -45.00, lng: -69.00 },
-          { name: "Llanura Amazónica", cat: "Llanuras y Desiertos", lat: -3.00, lng: -62.00 },
-
-          // PENÍNSULAS E ISLAS
-          { name: "Ibérica", cat: "Penínsulas", lat: 40.00, lng: -4.00 },
-          { name: "Escandinava", cat: "Penínsulas", lat: 61.00, lng: 15.00 },
-          { name: "Balcánica", cat: "Penínsulas", lat: 42.00, lng: 22.00 },
-          { name: "Arábiga", cat: "Penínsulas", lat: 23.00, lng: 47.00 },
-          { name: "del Indostán", cat: "Penínsulas", lat: 20.00, lng: 78.00 },
-          { name: "de Indochina", cat: "Penínsulas", lat: 15.00, lng: 101.00 },
-          { name: "de Corea", cat: "Penínsulas", lat: 37.50, lng: 127.00 },
-          { name: "de Somalia", cat: "Penínsulas", lat: 6.00, lng: 47.00 },
-          { name: "de Labrador", cat: "Penínsulas", lat: 54.00, lng: -66.00 },
-          { name: "Gran Bretaña", cat: "Islas y Archipiélagos", lat: 54.00, lng: -2.00 },
-          { name: "Islandia", cat: "Islas y Archipiélagos", lat: 64.90, lng: -18.50 },
-          { name: "Archipiélago del Japón", cat: "Islas y Archipiélagos", lat: 36.20, lng: 138.20 },
-          { name: "Archipiélago de Filipinas", cat: "Islas y Archipiélagos", lat: 12.80, lng: 121.70 },
-          { name: "Borneo", cat: "Islas y Archipiélagos", lat: 1.00, lng: 114.00 },
-          { name: "Sumatra", cat: "Islas y Archipiélagos", lat: 0.00, lng: 102.00 },
-          { name: "Java", cat: "Islas y Archipiélagos", lat: -7.50, lng: 110.00 },
-          { name: "Nueva Zelanda", cat: "Islas y Archipiélagos", lat: -41.00, lng: 174.00 },
-          { name: "Nueva Guinea", cat: "Islas y Archipiélagos", lat: -5.00, lng: 140.00 },
-          { name: "Madagascar", cat: "Islas y Archipiélagos", lat: -19.00, lng: 47.00 },
-          { name: "Cuba", cat: "Islas y Archipiélagos", lat: 21.50, lng: -79.50 },
-          { name: "Groenlandia", cat: "Islas y Archipiélagos", lat: 72.00, lng: -40.00 },
-          { name: "Islas Antillas", cat: "Islas y Archipiélagos", lat: 18.00, lng: -68.00 },
-
-          // CABOS, ESTRECHOS, OCÉANOS, MARES Y RÍOS
-          { name: "Cabo de Buena Esperanza", cat: "Cabos y Estrechos", lat: -34.35, lng: 18.47 },
-          { name: "Cabo de Hornos", cat: "Cabos y Estrechos", lat: -55.98, lng: -67.27 },
-          { name: "Estrecho de Gibraltar", cat: "Cabos y Estrechos", lat: 35.96, lng: -5.60 },
-          { name: "Estrecho de Bering", cat: "Cabos y Estrechos", lat: 65.80, lng: -168.90 },
-          { name: "Canal de Panamá", cat: "Cabos y Estrechos", lat: 9.08, lng: -79.68 },
-          { name: "Canal de Suez", cat: "Cabos y Estrechos", lat: 30.58, lng: 32.34 },
-          { name: "Golfo Pérsico", cat: "Cabos y Estrechos", lat: 27.00, lng: 51.00 },
-          { name: "Golfo de Bengala", cat: "Cabos y Estrechos", lat: 15.00, lng: 88.00 },
-          { name: "Golfo de Guinea", cat: "Cabos y Estrechos", lat: 1.00, lng: 2.00 },
-          { name: "Golfo de México", cat: "Cabos y Estrechos", lat: 25.00, lng: -90.00 },
-          { name: "Atlántico", cat: "Océanos", lat: 25.00, lng: -40.00 },
-          { name: "Pacífico", cat: "Océanos", lat: 0.00, lng: -160.00 },
-          { name: "Índico", cat: "Océanos", lat: -20.00, lng: 80.00 },
-          { name: "Glacial Ártico", cat: "Océanos", lat: 82.00, lng: 0.00 },
-          { name: "Glacial Antártico", cat: "Océanos", lat: -65.00, lng: 0.00 },
-          { name: "del Coral", cat: "Mares", lat: -18.00, lng: 152.00 },
-          { name: "Arábigo", cat: "Mares", lat: 15.00, lng: 65.00 },
-          { name: "de la China Meridional", cat: "Mares", lat: 12.00, lng: 113.00 },
-          { name: "Caribe o de las Antillas", cat: "Mares", lat: 15.00, lng: -75.00 },
-          { name: "Mediterráneo", cat: "Mares", lat: 35.00, lng: 18.00 },
-          { name: "de Noruega", cat: "Mares", lat: 68.00, lng: 2.00 },
-          { name: "del Japón", cat: "Mares", lat: 40.00, lng: 135.00 },
-          { name: "del Norte", cat: "Mares", lat: 56.00, lng: 3.00 },
-          { name: "Negro", cat: "Mares", lat: 43.00, lng: 35.00 },
-          { name: "Rojo", cat: "Mares", lat: 20.00, lng: 38.00 },
-          { name: "Amazonas", cat: "Ríos", lat: -3.46, lng: -62.21 },
-          { name: "Mississippi-Missouri", cat: "Ríos", lat: 37.00, lng: -89.00 },
-          { name: "Paraná", cat: "Ríos", lat: -27.50, lng: -58.80 },
-          { name: "Orinoco", cat: "Ríos", lat: 8.00, lng: -63.00 },
-          { name: "Yang-Tseu-Kiang (Chang Jiang o Azul)", cat: "Ríos", lat: 30.50, lng: 114.30 },
-          { name: "Yenisei", cat: "Ríos", lat: 61.00, lng: 90.00 },
-          { name: "Obi", cat: "Ríos", lat: 61.00, lng: 69.00 },
-          { name: "Indo", cat: "Ríos", lat: 26.00, lng: 68.00 },
-          { name: "Hoang-he o Amarillo", cat: "Ríos", lat: 36.00, lng: 110.00 },
-          { name: "Lena", cat: "Ríos", lat: 62.00, lng: 129.00 },
-          { name: "Mekong", cat: "Ríos", lat: 16.00, lng: 105.00 },
-          { name: "Ganges", cat: "Ríos", lat: 25.00, lng: 83.00 },
-          { name: "Níger", cat: "Ríos", lat: 13.00, lng: 2.00 },
-          { name: "Nilo", cat: "Ríos", lat: 26.82, lng: 30.80 },
-          { name: "Congo", cat: "Ríos", lat: -2.00, lng: 22.00 },
-          { name: "Zambeze", cat: "Ríos", lat: -15.00, lng: 28.00 },
-          { name: "Murray", cat: "Ríos", lat: -35.00, lng: 143.00 },
-          { name: "Volga", cat: "Ríos", lat: 53.00, lng: 48.00 },
-          { name: "Danubio", cat: "Ríos", lat: 45.00, lng: 20.00 },
-          { name: "Mar Caspio", cat: "Lagos", lat: 41.93, lng: 50.66 },
-          { name: "Superior", cat: "Lagos", lat: 47.70, lng: -87.50 },
-          { name: "Victoria", cat: "Lagos", lat: -1.00, lng: 33.00 },
-          { name: "Hurón", cat: "Lagos", lat: 44.80, lng: -82.40 },
-          { name: "Míchigan", cat: "Lagos", lat: 44.00, lng: -87.00 },
-          { name: "Tanganika", cat: "Lagos", lat: -6.00, lng: 29.50 },
-          { name: "Baikal", cat: "Lagos", lat: 53.50, lng: 108.00 },
-          { name: "Mar de Aral", cat: "Lagos", lat: 45.00, lng: 59.00 }
-        ]
-      },
-
-      world_pol: {
-        title: "Mapamundi Político",
-        center: [20, 0],
-        zoom: 2,
-        items: [
-          // ÁFRICA
-          { name: "Marruecos", cat: "País (África)", lat: 31.79, lng: -7.09 },
-          { name: "Argelia", cat: "País (África)", lat: 28.03, lng: 1.65 },
-          { name: "Libia", cat: "País (África)", lat: 26.33, lng: 17.22 },
-          { name: "Túnez", cat: "País (África)", lat: 33.88, lng: 9.53 },
-          { name: "Egipto", cat: "País (África)", lat: 26.82, lng: 30.80 },
-          { name: "Malí", cat: "País (África)", lat: 17.57, lng: -3.99 },
-          { name: "Chad", cat: "País (África)", lat: 15.45, lng: 18.73 },
-          { name: "Sudán", cat: "País (África)", lat: 12.86, lng: 30.21 },
-          { name: "Etiopía", cat: "País (África)", lat: 9.14, lng: 40.48 },
-          { name: "Senegal", cat: "País (África)", lat: 14.49, lng: -14.45 },
-          { name: "Ghana", cat: "País (África)", lat: 7.94, lng: -1.02 },
-          { name: "Costa de Marfil", cat: "País (África)", lat: 7.53, lng: -5.54 },
-          { name: "Nigeria", cat: "País (África)", lat: 9.08, lng: 8.67 },
-          { name: "Congo o Zaire", cat: "País (África)", lat: -4.03, lng: 21.75 },
-          { name: "Camerún", cat: "País (África)", lat: 7.36, lng: 12.35 },
-          { name: "Kenya", cat: "País (África)", lat: 0.02, lng: 37.90 },
-          { name: "Tanzania", cat: "País (África)", lat: -6.36, lng: 34.88 },
-          { name: "Angola", cat: "País (África)", lat: -11.20, lng: 17.87 },
-          { name: "Mozambique", cat: "País (África)", lat: -18.66, lng: 35.52 },
-          { name: "Sudáfrica", cat: "País (África)", lat: -30.55, lng: 22.93 },
-          { name: "Madagascar", cat: "País (África)", lat: -18.76, lng: 46.86 },
-
-          // AMÉRICA
-          { name: "Canadá", cat: "País (América)", lat: 56.13, lng: -106.34 },
-          { name: "Estados Unidos", cat: "País (América)", lat: 37.09, lng: -95.71 },
-          { name: "México", cat: "País (América)", lat: 23.63, lng: -102.55 },
-          { name: "Guatemala", cat: "País (América)", lat: 15.78, lng: -90.23 },
-          { name: "Cuba", cat: "País (América)", lat: 21.52, lng: -77.78 },
-          { name: "Colombia", cat: "País (América)", lat: 4.57, lng: -74.29 },
-          { name: "Venezuela", cat: "País (América)", lat: 6.42, lng: -66.58 },
-          { name: "Perú", cat: "País (América)", lat: -9.19, lng: -75.01 },
-          { name: "Ecuador", cat: "País (América)", lat: -1.83, lng: -78.18 },
-          { name: "Chile", cat: "País (América)", lat: -35.67, lng: -71.54 },
-          { name: "Brasil", cat: "País (América)", lat: -14.23, lng: -51.92 },
-          { name: "Argentina", cat: "País (América)", lat: -38.41, lng: -63.61 },
-          { name: "Paraguay", cat: "País (América)", lat: -23.44, lng: -58.44 },
-          { name: "Bolivia", cat: "País (América)", lat: -16.29, lng: -63.58 },
-
-          // ASIA
-          { name: "Turquía", cat: "País (Asia)", lat: 38.96, lng: 35.24 },
-          { name: "Siria", cat: "País (Asia)", lat: 34.80, lng: 38.99 },
-          { name: "Israel", cat: "País (Asia)", lat: 31.04, lng: 34.85 },
-          { name: "Irak", cat: "País (Asia)", lat: 33.22, lng: 43.67 },
-          { name: "Arabia Saudí", cat: "País (Asia)", lat: 23.88, lng: 45.07 },
-          { name: "Emiratos Árabes", cat: "País (Asia)", lat: 23.42, lng: 53.84 },
-          { name: "Irán", cat: "País (Asia)", lat: 32.42, lng: 53.68 },
-          { name: "Pakistán", cat: "País (Asia)", lat: 30.37, lng: 69.34 },
-          { name: "India", cat: "País (Asia)", lat: 20.59, lng: 78.96 },
-          { name: "Bangladesh", cat: "País (Asia)", lat: 23.68, lng: 90.35 },
-          { name: "Tailandia", cat: "País (Asia)", lat: 15.87, lng: 100.99 },
-          { name: "Malasia", cat: "País (Asia)", lat: 4.21, lng: 101.97 },
-          { name: "Indonesia", cat: "País (Asia)", lat: -0.78, lng: 113.92 },
-          { name: "Filipinas", cat: "País (Asia)", lat: 12.87, lng: 121.77 },
-          { name: "China", cat: "País (Asia)", lat: 35.86, lng: 104.19 },
-          { name: "Taiwan", cat: "País (Asia)", lat: 23.69, lng: 120.96 },
-          { name: "Corea del Sur", cat: "País (Asia)", lat: 35.90, lng: 127.76 },
-          { name: "Japón", cat: "País (Asia)", lat: 36.20, lng: 138.25 },
-          { name: "Mongolia", cat: "País (Asia)", lat: 46.86, lng: 103.84 },
-          { name: "Uzbekistán", cat: "País (Asia)", lat: 41.37, lng: 64.58 },
-          { name: "Kazajstán", cat: "País (Asia)", lat: 48.01, lng: 66.92 },
-
-          // EUROPA Y OCEANÍA
-          { name: "España", cat: "País (Europa)", lat: 40.46, lng: -3.74 },
-          { name: "Italia", cat: "País (Europa)", lat: 41.87, lng: 12.56 },
-          { name: "Francia", cat: "País (Europa)", lat: 46.22, lng: 2.21 },
-          { name: "Grecia", cat: "País (Europa)", lat: 39.07, lng: 21.82 },
-          { name: "Gran Bretaña", cat: "País (Europa)", lat: 55.37, lng: -3.43 },
-          { name: "Países Bajos", cat: "País (Europa)", lat: 52.13, lng: 5.29 },
-          { name: "Alemania", cat: "País (Europa)", lat: 51.16, lng: 10.45 },
-          { name: "Suecia", cat: "País (Europa)", lat: 60.12, lng: 18.64 },
-          { name: "Suiza", cat: "País (Europa)", lat: 46.81, lng: 8.22 },
-          { name: "Polonia", cat: "País (Europa)", lat: 51.91, lng: 19.14 },
-          { name: "Rumania", cat: "País (Europa)", lat: 45.94, lng: 24.96 },
-          { name: "Rusia", cat: "País (Europa)", lat: 61.52, lng: 105.31 },
-          { name: "Ucrania", cat: "País (Europa)", lat: 48.37, lng: 31.16 },
-          { name: "Australia", cat: "País (Oceanía)", lat: -25.27, lng: 133.77 },
-          { name: "Nueva Zelanda", cat: "País (Oceanía)", lat: -40.90, lng: 174.88 },
-          { name: "Papúa-Nueva Guinea", cat: "País (Oceanía)", lat: -6.31, lng: 143.95 },
-          { name: "Fidji/Fiji", cat: "País (Oceanía)", lat: -17.71, lng: 178.06 },
-
-          // CIUDADES
-          { name: "Toronto", cat: "Ciudad", lat: 43.65, lng: -79.38 },
-          { name: "Nueva York", cat: "Ciudad", lat: 40.71, lng: -74.00 },
-          { name: "Chicago", cat: "Ciudad", lat: 41.87, lng: -87.62 },
-          { name: "Los Ángeles", cat: "Ciudad", lat: 34.05, lng: -118.24 },
-          { name: "San Francisco", cat: "Ciudad", lat: 37.77, lng: -122.41 },
-          { name: "Ciudad de México", cat: "Ciudad", lat: 19.43, lng: -99.13 },
-          { name: "Bogotá", cat: "Ciudad", lat: 4.71, lng: -74.07 },
-          { name: "Lima", cat: "Ciudad", lat: -12.04, lng: -77.04 },
-          { name: "Santiago de Chile", cat: "Ciudad", lat: -33.44, lng: -70.66 },
-          { name: "Buenos Aires", cat: "Ciudad", lat: -34.60, lng: -58.38 },
-          { name: "Sao Paulo", cat: "Ciudad", lat: -23.55, lng: -46.63 },
-          { name: "Río de Janeiro", cat: "Ciudad", lat: -22.90, lng: -43.17 },
-          { name: "El Cairo", cat: "Ciudad", lat: 30.04, lng: 31.23 },
-          { name: "Casablanca", cat: "Ciudad", lat: 33.57, lng: -7.58 },
-          { name: "Lagos", cat: "Ciudad", lat: 6.52, lng: 3.37 },
-          { name: "Kinshasa", cat: "Ciudad", lat: -4.44, lng: 15.26 },
-          { name: "Johannesburg", cat: "Ciudad", lat: -26.20, lng: 28.04 },
-          { name: "Estambul", cat: "Ciudad", lat: 41.00, lng: 28.97 },
-          { name: "Teherán", cat: "Ciudad", lat: 35.68, lng: 51.38 },
-          { name: "Karachi", cat: "Ciudad", lat: 24.86, lng: 67.00 },
-          { name: "Bombay", cat: "Ciudad", lat: 19.07, lng: 72.87 },
-          { name: "Calcuta", cat: "Ciudad", lat: 22.57, lng: 88.36 },
-          { name: "Yakarta", cat: "Ciudad", lat: -6.20, lng: 106.84 },
-          { name: "Bangkok", cat: "Ciudad", lat: 13.75, lng: 100.50 },
-          { name: "Singapour", cat: "Ciudad", lat: 1.35, lng: 103.81 },
-          { name: "Seul", cat: "Ciudad", lat: 37.56, lng: 126.97 },
-          { name: "Shanghai", cat: "Ciudad", lat: 31.23, lng: 121.47 },
-          { name: "Hong Kong", cat: "Ciudad", lat: 22.31, lng: 114.16 },
-          { name: "Pekin o Beijing", cat: "Ciudad", lat: 39.90, lng: 116.40 },
-          { name: "Tokyo", cat: "Ciudad", lat: 35.67, lng: 139.65 },
-          { name: "Sidney", cat: "Ciudad", lat: -33.86, lng: 151.20 },
-          { name: "París", cat: "Ciudad", lat: 48.85, lng: 2.35 },
-          { name: "Londres", cat: "Ciudad", lat: 51.50, lng: -0.12 },
-          { name: "Berlín", cat: "Ciudad", lat: 52.52, lng: 13.40 },
-          { name: "Moscú", cat: "Ciudad", lat: 55.75, lng: 37.61 },
-          { name: "San Petersburgo", cat: "Ciudad", lat: 59.93, lng: 30.36 },
-          { name: "Roma", cat: "Ciudad", lat: 41.90, lng: 12.49 },
-          { name: "Atenas", cat: "Ciudad", lat: 37.98, lng: 23.72 }
-        ]
-      }
-    };
-
-    let map = null;
-    let markersLayer = null;
-    let currentDatasetKey = 'world_phys';
-    let currentMode = 'study';
-    let currentQuestionItem = null;
-
-    let practiceScore = 0;
-    let practiceHits = 0;
-    let practiceTotal = 0;
-
-    let quizHits = 0;
-    let quizIndex = 0;
-    let quizQuestions = [];
-
-    // GeoGuessr variables
-    let ggScore = 0;
-    let ggStreak = 0;
-    let ggRound = 0;
-    let ggTotalRounds = 10;
-    let ggCurrentPool = [];
-    let ggWaitingForNext = false;
-    let ggLineLayer = null;
-    let ggSelectedLatLng = null;
-    let ggTempMarker = null;
-
-    let audioCtx = null;
-    let isMuted = false;
-
-    function playAudio(type) {
-      if (isMuted) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'correct') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(659.25, now + 0.08);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          osc.start(now);
-          osc.stop(now + 0.25);
-        } else {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.setValueAtTime(174.61, now + 0.1);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-          osc.start(now);
-          osc.stop(now + 0.3);
-        }
-      } catch(e){}
-    }
-
-    function toggleMute() {
-      isMuted = !isMuted;
-      document.getElementById('muteIcon').className = isMuted ? 
-        'fa-solid fa-volume-xmark text-xs text-rose-400' : 
-        'fa-solid fa-volume-high text-xs text-slate-300';
-    }
-
-    function toggleMobileSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('-translate-x-full');
-    }
-
-    function showToast(message, type) {
-      const toast = document.getElementById('toastNotification');
-      if (!toast) return;
-      toast.innerText = message;
-      if (type === 'correct') {
-        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white border border-emerald-400 shadow-emerald-900/50";
-      } else {
-        toast.className = "fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold bg-rose-600 text-white border border-rose-400 shadow-rose-900/50";
-      }
-      toast.classList.remove('hidden');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 2200);
-    }
-
-    function initMap() {
-      map = L.map('map', { zoomControl: true }).setView(DATASETS[currentDatasetKey].center, DATASETS[currentDatasetKey].zoom);
-      
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=cb1_3u0c_1_039ef37ceffae3a2c3aced0b', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(map);
-
-      markersLayer = L.layerGroup().addTo(map);
-      loadSelectedDataset();
-    }
-
-    function loadSelectedDataset() {
-      currentDatasetKey = document.getElementById('datasetSelect').value;
-      const ds = DATASETS[currentDatasetKey];
-      
-      map.setView(ds.center, ds.zoom);
-      populateCategories();
-      
-      if (currentMode === 'study') {
-        renderStudyList();
-      } else if (currentMode !== 'geoguesser') {
-        startQuizMode();
-      }
-    }
-
-    function switchMode(mode) {
-      currentMode = mode;
-      
-      document.getElementById('panelStudy').classList.toggle('hidden', mode !== 'study');
-      document.getElementById('panelPractice').classList.toggle('hidden', mode !== 'practice');
-      document.getElementById('panelClass').classList.toggle('hidden', mode !== 'class');
-      document.getElementById('panelExam').classList.toggle('hidden', mode !== 'exam');
-      document.getElementById('panelGeoguesser').classList.toggle('hidden', mode !== 'geoguesser');
-
-      const btnMap = { study: 'modeStudyBtn', practice: 'modePracticeBtn', class: 'modeClassBtn', exam: 'modeExamBtn', geoguesser: 'modeGeoguesserBtn' };
-      Object.keys(btnMap).forEach(m => {
-        const btn = document.getElementById(btnMap[m]);
-        if (m === mode) {
-          if (m === 'geoguesser') {
-            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow ring-2 ring-amber-400 whitespace-nowrap";
-          } else {
-            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap";
-          }
-        } else {
-          if (m === 'geoguesser') {
-            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 bg-gradient-to-r from-amber-600/60 to-rose-600/60 whitespace-nowrap";
-          } else {
-            btn.className = "px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1 whitespace-nowrap";
-          }
-        }
-      });
-
-      if (window.innerWidth < 768) {
-        document.getElementById('sidebar').classList.add('-translate-x-full');
-      }
-
-      if (mode === 'study') {
-        map.off('click', onGeoGuessrMapClick);
-        renderStudyList();
-      } else if (mode === 'geoguesser') {
-        startGeoGuessrMode();
-      } else {
-        map.off('click', onGeoGuessrMapClick);
-        startQuizMode();
-      }
-    }
-
-    function populateCategories() {
-      const catSelect = document.getElementById('categoryFilter');
-      const items = DATASETS[currentDatasetKey].items;
-      const categories = ['ALL', ...new Set(items.map(i => i.cat))];
-      
-      catSelect.innerHTML = categories.map(c => 
-        `<option value="${c}">${c === 'ALL' ? 'Todas las Categorías' : c}</option>`
-      ).join('');
-    }
-
-    function renderStudyList() {
-      markersLayer.clearLayers();
-      const items = DATASETS[currentDatasetKey].items;
-      const catFilter = document.getElementById('categoryFilter').value;
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
-
-      const container = document.getElementById('studyItemsList');
-      container.innerHTML = '';
-
-      let count = 0;
-      items.forEach(item => {
-        if ((catFilter === 'ALL' || item.cat === catFilter) && item.name.toLowerCase().includes(searchQuery)) {
-          count++;
-          const marker = L.circleMarker([item.lat, item.lng], {
-            radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
-            color: '#0ea5e9',
-            fillColor: '#38bdf8',
-            fillOpacity: 0.85
-          }).addTo(markersLayer);
-          
-          marker.bindPopup(`<b>${item.name}</b><br><span class="text-xs text-slate-400">${item.cat}</span>`);
-
-          const div = document.createElement('div');
-          div.className = "p-2 rounded-lg bg-slate-900/80 border border-slate-700/60 hover:border-sky-500/50 cursor-pointer transition flex items-center justify-between text-xs";
-          div.innerHTML = `<span>${item.name}</span><span class="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${item.cat}</span>`;
-          div.onclick = () => {
-            map.flyTo([item.lat, item.lng], 5);
-            marker.openPopup();
-            if (window.innerWidth < 768) {
-              document.getElementById('sidebar').classList.add('-translate-x-full');
-            }
-          };
-          container.appendChild(div);
-        }
-      });
-
-      document.getElementById('studyTotalBadge').innerText = `${count} Elementos`;
-    }
-
-    function startQuizMode() {
-      const items = DATASETS[currentDatasetKey].items;
-      if (!items || items.length === 0) return;
-
-      quizHits = 0;
-      quizIndex = 0;
-
-      if (currentMode === 'practice') {
-        practiceScore = 0;
-        practiceHits = 0;
-        practiceTotal = 0;
-        document.getElementById('practiceScore').innerText = 0;
-        document.getElementById('practiceQuestionBox').innerHTML = `
-          <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
-            <span>¿DÓNDE SE ENCUENTRA?</span>
-            <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
-          </p>
-          <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-          <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
-          <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
-            <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
-          </button>
         `;
-      } else if (currentMode === 'class') {
-        quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, 5);
-      } else if (currentMode === 'exam') {
-        quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, Math.min(30, items.length));
+
+        map.off('click', onGeoGuessrMapClick);
+        map.on('click', onGeoGuessrMapClick);
+
+        nextGeoGuessrRound();
       }
 
-      nextQuestion();
-    }
+      function onGeoGuessrMapClick(e) {
+        if (ggWaitingForNext) return;
+        ggSelectedLatLng = e.latlng;
 
-    function nextQuestion() {
-      markersLayer.clearLayers();
-      const items = DATASETS[currentDatasetKey].items;
-
-      if (currentMode === 'practice') {
-        currentQuestionItem = items[Math.floor(Math.random() * items.length)];
-        const targetEl = document.getElementById('practiceTargetName');
-        const badgeEl = document.getElementById('practiceCategoryBadge');
-        if (targetEl) targetEl.innerText = currentQuestionItem.name;
-        if (badgeEl) badgeEl.innerText = currentQuestionItem.cat;
-      } else if (currentMode === 'class') {
-        if (quizIndex >= quizQuestions.length) {
-          const mediaNota = ((quizHits / 5) * 10).toFixed(1);
-          document.getElementById('classQuestionBox').innerHTML = `
-            <div class="text-center py-2">
-              <i class="fa-solid fa-award text-emerald-400 text-3xl mb-2"></i>
-              <h3 class="text-sm font-bold text-white mb-1">¡Clase Finalizada!</h3>
-              <p class="text-xs text-slate-300 mb-3">Aciertos: <span class="font-bold text-emerald-400">${quizHits} / 5</span></p>
-              <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
-                <span class="text-xs text-slate-300 font-semibold">Media (Nota):</span>
-                <span class="text-base font-extrabold text-amber-400">${mediaNota} / 10</span>
-              </div>
-              <button onclick="openSaveModalForScore(${quizHits})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
-              </button>
-            </div>
-          `;
-          return;
+        if (ggTempMarker) {
+          markersLayer.removeLayer(ggTempMarker);
         }
-        currentQuestionItem = quizQuestions[quizIndex];
-        document.getElementById('classTargetName').innerText = currentQuestionItem.name;
-        document.getElementById('classCategoryBadge').innerText = currentQuestionItem.cat;
-        document.getElementById('classProgress').innerText = `Pregunta ${quizIndex + 1} de 5`;
-      } else if (currentMode === 'exam') {
-        if (quizIndex >= quizQuestions.length) {
-          const total = quizQuestions.length;
-          const mediaNota = ((quizHits / total) * 10).toFixed(1);
-          document.getElementById('examQuestionBox').innerHTML = `
-            <div class="text-center py-2">
-              <i class="fa-solid fa-graduation-cap text-rose-400 text-3xl mb-2"></i>
-              <h3 class="text-sm font-bold text-white mb-1">¡Examen Finalizado!</h3>
-              <p class="text-xs text-slate-300 mb-3">Aciertos: <span class="font-bold text-rose-400">${quizHits} / ${total}</span></p>
-              <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
-                <span class="text-xs text-slate-300 font-semibold">Media (Nota):</span>
-                <span class="text-base font-extrabold text-amber-400">${mediaNota} / 10</span>
-              </div>
-              <button onclick="openSaveModalForScore(${quizHits})" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
-              </button>
-            </div>
-          `;
-          return;
-        }
-        currentQuestionItem = quizQuestions[quizIndex];
-        document.getElementById('examTargetName').innerText = currentQuestionItem.name;
-        document.getElementById('examCategoryBadge').innerText = currentQuestionItem.cat;
-        document.getElementById('examProgress').innerText = `Pregunta ${quizIndex + 1} de ${quizQuestions.length}`;
-      }
-
-      items.forEach(item => {
-        const marker = L.circleMarker([item.lat, item.lng], {
-          radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
-          color: '#ffffff',
-          fillColor: '#3b82f6',
-          fillOpacity: 0.85
+        ggTempMarker = L.circleMarker([ggSelectedLatLng.lat, ggSelectedLatLng.lng], {
+          radius: 7,
+          color: '#ef4444',
+          fillColor: '#f87171',
+          fillOpacity: 0.9
         }).addTo(markersLayer);
 
-        marker.on('click', () => {
-          if (item.name === currentQuestionItem.name) {
-            playAudio('correct');
-            if (currentMode === 'practice') {
-              practiceScore += 10;
-              practiceHits++;
-              practiceTotal++;
-              document.getElementById('practiceScore').innerText = practiceScore;
-              showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
-              nextQuestion();
-            } else if (currentMode === 'class') {
-              quizHits++;
-              showToast(`¡Correcto! 🎯 Has localizado ${item.name}`, 'correct');
-              quizIndex++;
-              nextQuestion();
-            } else if (currentMode === 'exam') {
-              quizHits++;
-              quizIndex++;
-              nextQuestion();
-            }
-          } else {
-            playAudio('wrong');
-            if (currentMode === 'practice') {
-              practiceScore -= 10;
-              practiceTotal++;
-              document.getElementById('practiceScore').innerText = practiceScore;
-              showToast(`❌ Incorrecto (-10 pts). Buscabas: ${currentQuestionItem.name}`, 'wrong');
-              nextQuestion();
-            } else if (currentMode === 'class') {
-              showToast(`❌ Incorrecto. Buscabas: ${currentQuestionItem.name}`, 'wrong');
-              quizIndex++;
-              nextQuestion();
-            } else if (currentMode === 'exam') {
-              quizIndex++;
-              nextQuestion();
-            }
-          }
-        });
-      });
-    }
-
-    function finishPractice() {
-      if (practiceTotal === 0) {
-        alert('¡Aún no has respondido ninguna pregunta en práctica!');
-        return;
-      }
-      const mediaPorcentaje = ((practiceHits / practiceTotal) * 100).toFixed(1);
-      document.getElementById('practiceQuestionBox').innerHTML = `
-        <div class="text-center py-2">
-          <i class="fa-solid fa-bullseye text-amber-400 text-3xl mb-2"></i>
-          <h3 class="text-sm font-bold text-white mb-1">¡Práctica Finalizada!</h3>
-          <p class="text-xs text-slate-300 mb-2">Puntos Totales: <span class="font-bold text-emerald-400">${practiceScore} pts</span></p>
-          <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 flex items-center justify-between">
-            <span class="text-xs text-slate-300 font-semibold">Media (Aciertos):</span>
-            <span class="text-base font-extrabold text-amber-400">${mediaPorcentaje}% (${practiceHits}/${practiceTotal})</span>
-          </div>
-          <button onclick="openSaveModalForScore(${practiceScore})" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar en Tier List
-          </button>
-        </div>
-      `;
-      markersLayer.clearLayers();
-    }
-
-    // --- MODO GEOGUESSR EXTREMO ---
-    function startGeoGuessrMode() {
-      ggScore = 0;
-      ggStreak = 0;
-      ggRound = 0;
-      
-      const combinedItems = [...DATASETS.world_phys.items, ...DATASETS.world_pol.items];
-      ggCurrentPool = combinedItems.sort(() => 0.5 - Math.random()).slice(0, 10);
-      
-      document.getElementById('ggScore').innerText = ggScore;
-      document.getElementById('ggStreak').innerText = ggStreak;
-      
-      document.getElementById('ggQuestionBox').innerHTML = `
-        <p class="text-xs font-semibold text-amber-400 mb-1 flex items-center justify-between">
-          <span>UBICA EXACTAMENTE:</span>
-          <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
-        </p>
-        <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-        <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
-        <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
-        <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
-          Confirmar Ubicación 🎯
-        </button>
-        <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-          Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      `;
-
-      map.off('click', onGeoGuessrMapClick);
-      map.on('click', onGeoGuessrMapClick);
-
-      nextGeoGuessrRound();
-    }
-
-    function onGeoGuessrMapClick(e) {
-      if (ggWaitingForNext) return;
-      ggSelectedLatLng = e.latlng;
-
-      if (ggTempMarker) {
-        markersLayer.removeLayer(ggTempMarker);
-      }
-      ggTempMarker = L.circleMarker([ggSelectedLatLng.lat, ggSelectedLatLng.lng], {
-        radius: 7,
-        color: '#ef4444',
-        fillColor: '#f87171',
-        fillOpacity: 0.9
-      }).addTo(markersLayer);
-
-      const confirmBtn = document.getElementById('ggConfirmBtn');
-      if (confirmBtn) {
-        confirmBtn.disabled = false;
-        confirmBtn.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-pointer";
-        confirmBtn.innerText = "Confirmar Ubicación 🎯";
-      }
-    }
-
-    function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-      const R = 6371; 
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function confirmGeoGuessrSelection() {
-      if (!ggSelectedLatLng || ggWaitingForNext) return;
-      ggWaitingForNext = true;
-
-      const clickLat = ggSelectedLatLng.lat;
-      const clickLng = ggSelectedLatLng.lng;
-      const targetLat = currentQuestionItem.lat;
-      const targetLng = currentQuestionItem.lng;
-
-      const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
-
-      let roundPoints = 0;
-      if (distanceKm < 150) {
-        roundPoints = 500;
-        ggStreak++;
-        playAudio('correct');
-      } else if (distanceKm < 500) {
-        roundPoints = 250;
-        ggStreak++;
-        playAudio('correct');
-      } else if (distanceKm < 1200) {
-        roundPoints = 100;
-        ggStreak++;
-        playAudio('correct');
-      } else {
-        roundPoints = 0;
-        ggStreak = 0;
-        playAudio('wrong');
+        const confirmBtn = document.getElementById('ggConfirmBtn');
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-pointer";
+          confirmBtn.innerText = "Confirmar Ubicación 🎯";
+        }
       }
 
-      const streakBonus = Math.floor(ggStreak / 3) * 50;
-      const totalRoundScore = roundPoints + streakBonus;
-      ggScore += totalRoundScore;
-
-      document.getElementById('ggScore').innerText = ggScore;
-      document.getElementById('ggStreak').innerText = ggStreak;
-
-      const confirmBtn = document.getElementById('ggConfirmBtn');
-      if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.className = "hidden w-full bg-slate-700 text-slate-500 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
+      function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
       }
 
-      const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
-      targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
+      function confirmGeoGuessrSelection() {
+        if (!ggSelectedLatLng || ggWaitingForNext) return;
+        ggWaitingForNext = true;
 
-      ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
+        const clickLat = ggSelectedLatLng.lat;
+        const clickLng = ggSelectedLatLng.lng;
+        const targetLat = currentQuestionItem.lat;
+        const targetLng = currentQuestionItem.lng;
 
-      const feedbackDiv = document.getElementById('ggResultFeedback');
-      feedbackDiv.innerHTML = `
-        📍 Error: <b>${Math.round(distanceKm)} km</b><br>
-        ⭐ Puntos ronda: <b>+${totalRoundScore} pts</b> ${streakBonus > 0 ? `(🔥 +${streakBonus} extra)` : ''}
-      `;
-      feedbackDiv.classList.remove('hidden');
-      document.getElementById('ggNextBtn').classList.remove('hidden');
-    }
+        const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
 
-    function nextGeoGuessrRound() {
-      markersLayer.clearLayers();
-      ggTempMarker = null;
-      ggSelectedLatLng = null;
-      if (ggLineLayer) {
-        map.removeLayer(ggLineLayer);
-        ggLineLayer = null;
-      }
+        let roundPoints = 0;
+        let isFiveK = false;
 
-      if (ggRound >= ggCurrentPool.length) {
-        map.off('click', onGeoGuessrMapClick);
-        document.getElementById('ggQuestionBox').innerHTML = `
-          <div class="text-center py-2">
-            <i class="fa-solid fa-trophy text-amber-400 text-3xl mb-2"></i>
-            <h3 class="text-sm font-bold text-white mb-1">¡GeoGuessr Extremo Completado! 🔥</h3>
-            <p class="text-xs text-slate-300 mb-3">Puntuación Total: <span class="font-bold text-amber-400">${ggScore} pts</span></p>
-            <div class="flex gap-2">
-              <button onclick="openSaveModalForScore(${ggScore})" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar
-              </button>
-              <button onclick="startGeoGuessrMode()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-rotate-right"></i> Reiniciar
-              </button>
-            </div>
-          </div>
-        `;
-        return;
-      }
+        if (distanceKm < 7.5) {
+          roundPoints = 500;
+          ggStreak++;
+          isFiveK = true;
+          playAudio('correct');
+        } else if (distanceKm < 150) {
+          roundPoints = 500;
+          ggStreak++;
+          playAudio('correct');
+        } else if (distanceKm < 500) {
+          roundPoints = 250;
+          ggStreak++;
+          playAudio('correct');
+        } else if (distanceKm < 1200) {
+          roundPoints = 100;
+          ggStreak++;
+          playAudio('correct');
+        } else {
+          roundPoints = 0;
+          ggStreak = 0;
+          playAudio('wrong');
+        }
 
-      currentQuestionItem = ggCurrentPool[ggRound];
-      ggRound++;
-      ggWaitingForNext = false;
+        const streakBonus = Math.floor(ggStreak / 3) * 50;
+        const totalRoundScore = roundPoints + streakBonus;
+        ggScore += totalRoundScore;
 
-      document.getElementById('ggRoundBadge').innerText = `Ronda ${ggRound}/${ggCurrentPool.length}`;
-      document.getElementById('ggTargetName').innerText = currentQuestionItem.name;
-      document.getElementById('ggResultFeedback').classList.add('hidden');
-      document.getElementById('ggNextBtn').classList.add('hidden');
-      
-      const confirmBtn = document.getElementById('ggConfirmBtn');
-      if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.className = "w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
-        confirmBtn.innerText = "Confirmar Ubicación 🎯";
-      }
-    }
+        document.getElementById('ggScore').innerText = ggScore;
+        document.getElementById('ggStreak').innerText = ggStreak;
 
-    // --- MODALES Y TIER LIST GLOBAL ---
+        const confirmBtn = document.getElementById('ggConfirmBtn');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.className = "hidden w-full bg-slate-700 text-slate-500 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
+        }
 
-    function getTierByScore(score, mode) {
-      if (mode === 'practice') {
-        if (score >= 1500) return 'tierS';
-        if (score >= 1000) return 'tierA';
-        if (score >= 500) return 'tierB';
-        if (score >= 200) return 'tierC';
-        return 'tierD';
-      } else if (mode === 'class') {
-        if (score >= 5) return 'tierS';
-        if (score >= 4) return 'tierA';
-        if (score >= 3) return 'tierB';
-        if (score >= 2) return 'tierC';
-        return 'tierD';
-      } else if (mode === 'geoguesser') {
-        if (score >= 4000) return 'tierS';
-        if (score >= 3000) return 'tierA';
-        if (score >= 2000) return 'tierB';
-        if (score >= 1000) return 'tierC';
-        return 'tierD';
-      } else {
-        if (score >= 28) return 'tierS';
-        if (score >= 23) return 'tierA';
-        if (score >= 18) return 'tierB';
-        if (score >= 12) return 'tierC';
-        return 'tierD';
-      }
-    }
+        const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
+        targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
 
-    let customScoreToSave = 0;
+        ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
 
-    function openSaveModal() {
-      if (currentMode === 'practice') customScoreToSave = practiceScore;
-      else if (currentMode === 'geoguesser') customScoreToSave = ggScore;
-      else customScoreToSave = quizHits;
-
-      document.getElementById('finalScoreDisplay').innerText = customScoreToSave;
-      document.getElementById('saveScoreModal').style.display = 'flex';
-    }
-
-    function openSaveModalForScore(score) {
-      customScoreToSave = score;
-      document.getElementById('finalScoreDisplay').innerText = score;
-      document.getElementById('saveScoreModal').style.display = 'flex';
-    }
-
-    function closeModals() {
-      document.getElementById('saveScoreModal').style.display = 'none';
-      document.getElementById('tierListModal').style.display = 'none';
-    }
-
-    async function submitScoreToCloud() {
-      const name = document.getElementById('playerName').value.trim();
-      if (!name) {
-        alert('Por favor, introduce tu nombre.');
-        return;
-      }
-
-      const assignedTier = getTierByScore(customScoreToSave, currentMode);
-      const payload = { 
-        name: name, 
-        score: customScoreToSave, 
-        tier: assignedTier, 
-        dataset: currentDatasetKey, 
-        mode: currentMode 
-      };
-
-      const btn = document.getElementById('submitBtn');
-      btn.innerText = "Subiendo...";
-      btn.disabled = true;
-
-      try {
-        await fetch(WEB_APP_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        alert('¡Guardado en la Tier List global con éxito!');
-        closeModals();
-        document.getElementById('playerName').value = '';
-      } catch (error) {
-        console.error('Error al guardar:', error);
-        alert('Hubo un error al conectar con la nube.');
-      } finally {
-        btn.innerText = "Enviar a la Nube";
-        btn.disabled = false;
-      }
-    }
-
-    async function renderTierList() {
-      ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
-        document.getElementById(id).innerHTML = '<span style="color:#888; font-size:0.85rem; padding:5px;">Cargando clasificación global...</span>';
-      });
-      document.getElementById('tierListModal').style.display = 'flex';
-
-      try {
-        const response = await fetch(WEB_APP_URL);
-        const allData = await response.json();
-
-        const selectedMap = document.getElementById('tierDatasetFilter').value;
-        const selectedMode = document.getElementById('tierModeFilter').value;
+        const feedbackDiv = document.getElementById('ggResultFeedback');
+        let html = `📍 Error: <b>${Math.round(distanceKm)} km</b><br>`;
         
-        let tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
+        if (isFiveK) {
+          html += `<div class="my-2 p-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black rounded-xl font-black text-xl tracking-wider anim-5k shadow-2xl border-2 border-white flex items-center justify-center gap-2">
+            <span>👑 5K</span> <span class="text-xs uppercase bg-black text-amber-300 px-2 py-0.5 rounded-full">¡Perfecto!</span>
+          </div>`;
+        }
 
-        const uniqueMap = new Map();
-        tierData.forEach(item => {
-          if (!uniqueMap.has(item.name) || Number(uniqueMap.get(item.name).score) < Number(item.score)) {
-            uniqueMap.set(item.name, item);
-          }
-        });
-        tierData = Array.from(uniqueMap.values());
-        tierData.sort((a, b) => Number(b.score) - Number(b.score));
+        html += `⭐ Puntos ronda: <b>+${totalRoundScore} pts</b> ${streakBonus > 0 ? `(🔥 +${streakBonus} extra)` : ''}`;
+        feedbackDiv.innerHTML = html;
+        feedbackDiv.classList.remove('hidden');
+        document.getElementById('ggNextBtn').classList.remove('hidden');
+      }
 
-        ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
-          document.getElementById(id).innerHTML = '';
-        });
+      function nextGeoGuessrRound() {
+        markersLayer.clearLayers();
+        ggTempMarker = null;
+        ggSelectedLatLng = null;
+        if (ggLineLayer) {
+          map.removeLayer(ggLineLayer);
+          ggLineLayer = null;
+        }
 
-        if (tierData.length === 0) {
-          document.getElementById('tierS').innerHTML = '<span style="color:#aaa; padding:5px;">Aún no hay registros para esta combinación.</span>';
+        if (ggRound >= ggCurrentPool.length) {
+          map.off('click', onGeoGuessrMapClick);
+          document.getElementById('ggQuestionBox').innerHTML = `
+            <div class="text-center py-2">
+              <i class="fa-solid fa-trophy text-amber-400 text-3xl mb-2"></i>
+              <h3 class="text-sm font-bold text-white mb-1">¡GeoGuessr Extremo Completado! 🔥</h3>
+              <p class="text-xs text-slate-300 mb-3">Puntuación Total: <span class="font-bold text-amber-400">${ggScore} pts</span></p>
+              <div class="flex gap-2">
+                <button onclick="openSaveModalForScore(${ggScore})" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+                <button onclick="startGeoGuessrMode()" class="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-rotate-right"></i> Reiniciar
+                </button>
+              </div>
+            </div>
+          `;
           return;
         }
 
-        tierData.forEach(entry => {
-          const container = document.getElementById(entry.tier);
-          if (container) {
-            const card = document.createElement('div');
-            card.className = 'tier-item-card';
-            card.innerText = `${entry.name} (${entry.score} pts)`;
-            container.appendChild(card);
-          }
-        });
-      } catch (error) {
-        console.error('Error al cargar la tier list:', error);
-        document.getElementById('tierS').innerHTML = '<span style="color:#ef4444; padding:5px;">Error al cargar datos.</span>';
-      }
-    }
+        currentQuestionItem = ggCurrentPool[ggRound];
+        ggRound++;
+        ggWaitingForNext = false;
 
-    window.onload = initMap;
-  </script>
+        document.getElementById('ggRoundBadge').innerText = `Ronda ${ggRound}/${ggCurrentPool.length}`;
+        document.getElementById('ggTargetName').innerText = currentQuestionItem.name;
+        document.getElementById('ggResultFeedback').classList.add('hidden');
+        document.getElementById('ggNextBtn').classList.add('hidden');
+        
+        const confirmBtn = document.getElementById('ggConfirmBtn');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.className = "w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
+          confirmBtn.innerText = "Confirmar Ubicación 🎯";
+        }
+      }
+
+      // --- MODALES Y TIER LIST GLOBAL ---
+      function getTierByScore(score, mode) {
+        if (mode === 'practice') {
+          if (score >= 1500) return 'tierS';
+          if (score >= 1000) return 'tierA';
+          if (score >= 500) return 'tierB';
+          if (score >= 200) return 'tierC';
+          return 'tierD';
+        } else if (mode === 'class') {
+          if (score >= 5) return 'tierS';
+          if (score >= 4) return 'tierA';
+          if (score >= 3) return 'tierB';
+          if (score >= 2) return 'tierC';
+          return 'tierD';
+        } else if (mode === 'geoguesser') {
+          if (score >= 4000) return 'tierS';
+          if (score >= 3000) return 'tierA';
+          if (score >= 2000) return 'tierB';
+          if (score >= 1000) return 'tierC';
+          return 'tierD';
+        } else {
+          if (score >= 28) return 'tierS';
+          if (score >= 23) return 'tierA';
+          if (score >= 18) return 'tierB';
+          if (score >= 12) return 'tierC';
+          return 'tierD';
+        }
+      }
+
+      let customScoreToSave = 0;
+
+      function openSaveModal() {
+        if (currentMode === 'study') {
+          showToast('❌ No se puede guardar en Modo Estudio.', 'wrong');
+          return;
+        }
+
+        if (currentMode === 'practice') customScoreToSave = practiceScore;
+        else if (currentMode === 'geoguesser') customScoreToSave = ggScore;
+        else customScoreToSave = quizHits;
+
+        document.getElementById('finalScoreDisplay').innerText = customScoreToSave;
+        document.getElementById('saveScoreModal').style.display = 'flex';
+      }
+
+      function openSaveModalForScore(score) {
+        customScoreToSave = score;
+        document.getElementById('finalScoreDisplay').innerText = score;
+        document.getElementById('saveScoreModal').style.display = 'flex';
+      }
+
+      function closeModals() {
+        document.getElementById('saveScoreModal').style.display = 'none';
+        document.getElementById('tierListModal').style.display = 'none';
+      }
+
+      async function submitScoreToCloud() {
+        const name = document.getElementById('playerName').value.trim();
+        if (!name) {
+          alert('Por favor, introduce tu nombre.');
+          return;
+        }
+
+        const assignedTier = getTierByScore(customScoreToSave, currentMode);
+        const payload = { 
+          name: name, 
+          score: customScoreToSave, 
+          tier: assignedTier, 
+          dataset: currentDatasetKey, 
+          mode: currentMode 
+        };
+
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = "Subiendo...";
+        btn.disabled = true;
+
+        try {
+          await fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          alert('¡Guardado en la Tier List global con éxito!');
+          closeModals();
+          document.getElementById('playerName').value = '';
+        } catch (error) {
+          console.error('Error al guardar:', error);
+          alert('Hubo un error al conectar con la nube.');
+        } finally {
+          btn.innerText = "Enviar a la Nube";
+          btn.disabled = false;
+        }
+      }
+
+      async function renderTierList() {
+        ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
+          document.getElementById(id).innerHTML = '<span style="color:#888; font-size:0.85rem; padding:5px;">Cargando clasificación global...</span>';
+        });
+        document.getElementById('tierListModal').style.display = 'flex';
+
+        try {
+          const response = await fetch(WEB_APP_URL);
+          const allData = await response.json();
+
+          const selectedMap = document.getElementById('tierDatasetFilter').value;
+          const selectedMode = document.getElementById('tierModeFilter').value;
+          
+          let tierData = allData.filter(item => item.dataset === selectedMap && item.mode === selectedMode);
+
+          const uniqueMap = new Map();
+          tierData.forEach(item => {
+            if (!uniqueMap.has(item.name) || Number(uniqueMap.get(item.name).score) < Number(item.score)) {
+              uniqueMap.set(item.name, item);
+            }
+          });
+          tierData = Array.from(uniqueMap.values());
+          tierData.sort((a, b) => Number(b.score) - Number(a.score));
+
+          ['tierS', 'tierA', 'tierB', 'tierC', 'tierD'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+          });
+
+          if (tierData.length === 0) {
+            document.getElementById('tierS').innerHTML = '<span style="color:#aaa; padding:5px;">Aún no hay registros para esta combinación.</span>';
+            return;
+          }
+
+          tierData.forEach(entry => {
+            const container = document.getElementById(entry.tier);
+            if (container) {
+              const card = document.createElement('div');
+              card.className = 'tier-item-card';
+              card.innerText = `${entry.name} (${entry.score} pts)`;
+              container.appendChild(card);
+            }
+          });
+        } catch (error) {
+          console.error('Error al cargar la tier list:', error);
+          document.getElementById('tierS').innerHTML = '<span style="color:#ef4444; padding:5px;">Error al cargar datos.</span>';
+        }
+      }
+
+      window.onload = initMap;
+    </script>
 </body>
 </html>
