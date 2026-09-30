@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examen Geografía - Tier List Global</title>
+    <title>Examen Geografía - Modo Admin & Tier List</title>
     
-    <!-- Icono de bola del mundo para la pestaña -->
+    <!-- Icono de bola del mundo -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
 
     <!-- Tailwind CSS CDN -->
@@ -14,6 +14,9 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Turf.js para análisis espacial de polígonos -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -25,7 +28,7 @@
 
     <style>
       .leaflet-container {
-        background-color: #1e293b !important;
+        background-color: #0f172a !important;
         font-family: 'Inter', sans-serif;
       }
       ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -33,7 +36,6 @@
       ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
       ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-      /* Animación mítica GeoGuessr 5K */
       @keyframes geoguessr5k {
         0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
         50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
@@ -43,16 +45,15 @@
         animation: geoguessr5k 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
-      /* Modales y Tier List */
       .modal {
           position: fixed;
           top: 0; left: 0; width: 100%; height: 100%;
-          background: rgba(0,0,0,0.7);
+          background: rgba(0,0,0,0.75);
           display: none;
           justify-content: center;
           align-items: center;
           z-index: 1000;
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(6px);
       }
       .tier-container {
           max-height: 80vh;
@@ -98,6 +99,11 @@
           font-size: 0.85rem;
           border: 1px solid #475569;
       }
+
+      .admin-tab-btn.active {
+          background-color: #3b82f6;
+          color: #ffffff;
+      }
     </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden bg-slate-900 text-slate-100 relative">
@@ -108,7 +114,6 @@
     <!-- Top Navigation Bar -->
     <header class="bg-slate-800/90 border-b border-slate-700/80 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0 z-30 backdrop-blur-md shadow-md">
       <div class="flex items-center space-x-2.5">
-        <!-- Botón Toggle Sidebar en Móvil -->
         <button onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg bg-sky-600 text-white text-xs font-semibold shadow" title="Mostrar/Ocultar Panel">
           <i class="fa-solid fa-sliders"></i>
         </button>
@@ -118,14 +123,14 @@
         <div>
           <h1 class="font-bold text-sm sm:text-lg leading-tight text-white flex items-center gap-2">
             Examen Geografía
+            <span id="adminBadge" class="hidden text-[10px] bg-rose-600 text-white font-extrabold px-2 py-0.5 rounded-full border border-rose-400 animate-pulse">MODO ADMIN ACTIVO</span>
           </h1>
           <p class="text-[10px] text-slate-400 hidden sm:block">IES Fernando de Herrera</p>
         </div>
       </div>
 
-      <!-- Map & Mode Controls -->
+      <!-- Control de Mapa y Modos -->
       <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <!-- Selector de Mapa Principal -->
         <div class="relative">
           <select id="datasetSelect" onchange="loadSelectedDataset()" class="bg-slate-900 text-slate-500 border border-slate-700/50 rounded-lg px-2 py-1.5 text-xs font-medium cursor-not-allowed opacity-60 shadow-inner" disabled>
             <option value="world_phys">Físico</option>
@@ -133,8 +138,7 @@
           </select>
         </div>
 
-        <!-- Game Mode Switcher -->
-        <div class="flex bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-700/80 overflow-x-auto max-w-[220px] sm:max-w-none">
+        <div class="flex bg-slate-900/80 p-0.5 sm:p-1 rounded-xl border border-slate-700/80 overflow-x-auto max-w-[200px] sm:max-w-none">
           <button id="modeStudyBtn" onclick="switchMode('study')" class="px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-all flex items-center gap-1 bg-sky-600 text-white shadow whitespace-nowrap">
             <i class="fa-solid fa-book-open"></i> <span class="hidden lg:inline">Estudio</span>
           </button>
@@ -152,8 +156,10 @@
           </button>
         </div>
 
-        <!-- Tier List & Sound Buttons -->
         <div class="flex items-center gap-1 border-l border-slate-700/80 pl-1.5">
+          <button onclick="openAdminAuthModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-rose-700 hover:bg-rose-600 text-white text-xs font-semibold transition shadow flex items-center gap-1" title="Modo Admin">
+            <i class="fa-solid fa-key"></i> <span class="hidden lg:inline">Admin</span>
+          </button>
           <button onclick="openSaveModal()" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow" title="Guardar Puntuación">
             <i class="fa-solid fa-floppy-disk"></i> <span class="hidden lg:inline">Guardar</span>
           </button>
@@ -167,29 +173,28 @@
       </div>
     </header>
 
-    <!-- Main Content Layout -->
+    <!-- Layout Principal -->
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
       
-      <!-- Sidebar Controls Panel -->
+      <!-- Panel Lateral de Control -->
       <aside id="sidebar" class="absolute md:relative inset-y-0 left-0 z-20 w-80 md:w-80 lg:w-96 bg-slate-800/98 md:bg-slate-800/95 border-r border-slate-700/80 flex flex-col shrink-0 overflow-y-auto shadow-2xl transition-transform duration-300 -translate-x-full md:translate-x-0">
         
-        <!-- Botón Cerrar Panel en Móvil -->
         <div class="md:hidden p-3 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
           <span class="text-xs font-bold text-sky-400">Panel de Control</span>
           <button onclick="toggleMobileSidebar()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- MODE 1: ESTUDIO -->
+        <!-- MODO ESTUDIO -->
         <div id="panelStudy" class="p-4 flex flex-col gap-3">
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-compass"></i> Modo Estudio (Físico + Político)
+                <i class="fa-solid fa-compass"></i> Modo Estudio
               </span>
               <span id="studyTotalBadge" class="text-[11px] font-semibold bg-sky-500/10 text-sky-300 px-2 py-0.5 rounded-full border border-sky-500/20">0 Elementos</span>
             </div>
             <p class="text-xs text-slate-300 leading-relaxed">
-              Explora todo el mapa combinado. El guardado está deshabilitado en este modo.
+              Explora todo el mapa combinado mediante puntos. El guardado está deshabilitado en este modo.
             </p>
           </div>
 
@@ -211,7 +216,7 @@
           <div class="flex-1 min-h-[160px] max-h-[300px] md:max-h-[calc(100vh-340px)] overflow-y-auto space-y-1.5 pr-1" id="studyItemsList"></div>
         </div>
 
-        <!-- MODE 2: PRÁCTICA -->
+        <!-- MODO PRÁCTICA -->
         <div id="panelPractice" class="p-4 hidden flex-col gap-3">
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex justify-between items-center">
             <div>
@@ -229,18 +234,18 @@
 
           <div id="practiceQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-sky-500/30 rounded-xl p-4 shadow-lg">
             <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
-              <span>¿DÓNDE SE ENCUENTRA?</span>
-              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
+              <span id="practiceQuestionHeader">¿DÓNDE SE ENCUENTRA?</span>
+              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">Categoría</span>
             </p>
             <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
+            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el punto correcto en el mapa.</p>
             <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
               <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
             </button>
           </div>
         </div>
 
-        <!-- MODE 3: CLASE -->
+        <!-- MODO CLASE -->
         <div id="panelClass" class="p-4 hidden flex-col gap-3">
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
             <div>
@@ -253,15 +258,15 @@
 
           <div id="classQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-xl p-4 shadow-lg">
             <p class="text-xs font-semibold text-emerald-400 mb-1 flex items-center justify-between">
-              <span>¿DÓNDE SE ENCUENTRA?</span>
-              <span id="classCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300">Categoría</span>
+              <span id="classQuestionHeader">¿DÓNDE SE ENCUENTRA?</span>
+              <span id="classCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">Categoría</span>
             </p>
             <h2 id="classTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-            <p class="text-xs text-slate-400 mb-2">Haz clic en la ubicación correspondiente.</p>
+            <p class="text-xs text-slate-400 mb-2">Haz clic en el punto correspondiente.</p>
           </div>
         </div>
 
-        <!-- MODE 4: EXAMEN -->
+        <!-- MODO EXAMEN -->
         <div id="panelExam" class="p-4 hidden flex-col gap-3">
           <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60 flex items-center justify-between">
             <div>
@@ -274,22 +279,25 @@
 
           <div id="examQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-rose-500/30 rounded-xl p-4 shadow-lg">
             <p class="text-xs font-semibold text-rose-400 mb-1 flex items-center justify-between">
-              <span>¿DÓNDE SE ENCUENTRA?</span>
-              <span id="examCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300">Categoría</span>
+              <span id="examQuestionHeader">¿DÓNDE SE ENCUENTRA?</span>
+              <span id="examCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">Categoría</span>
             </p>
             <h2 id="examTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-            <p class="text-xs text-slate-400 mb-2">Haz clic en el mapa para registrar tu respuesta.</p>
+            <p class="text-xs text-slate-400 mb-2">Haz clic en el punto para registrar tu respuesta.</p>
           </div>
         </div>
 
-        <!-- MODE 5: GEOGUESSR EXTREMO -->
+        <!-- MODO GEOGUESSR -->
         <div id="panelGeoguesser" class="p-4 hidden flex-col gap-3">
           <div class="bg-slate-900/60 p-3 rounded-xl border border-rose-500/40 flex justify-between items-center shadow-lg">
             <div>
               <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                 <i class="fa-solid fa-crosshairs"></i> GeoGuessr 🔥
               </span>
-              <p class="text-xs text-slate-400 mt-0.5">Físico + Político unidos</p>
+              <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                <span>Polígonos invisibles</span>
+                <span id="ggRoundBadge" class="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">Ronda 1/10</span>
+              </p>
             </div>
             <div class="text-right">
               <div class="text-xs font-bold text-amber-400 flex items-center justify-end gap-1">
@@ -303,11 +311,11 @@
 
           <div id="ggQuestionBox" class="bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/40 rounded-xl p-4 shadow-lg">
             <p class="text-xs font-semibold text-amber-400 mb-1 flex items-center justify-between">
-              <span>UBICA EXACTAMENTE:</span>
-              <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
+              <span id="ggQuestionHeader">UBICA EN EL MAPA:</span>
+              <span id="ggCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Categoría</span>
             </p>
-            <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-            <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
+            <h2 id="ggTargetName" class="text-xl font-extrabold text-white mb-2">Cargando...</h2>
+            <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar tu punto (¡si es un océano, mar, río o área vale pulsar dentro!).</p>
             <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
             <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
               Confirmar Ubicación 🎯
@@ -320,20 +328,134 @@
 
       </aside>
 
-      <!-- Leaflet Map Canvas -->
+      <!-- Lienzo de Mapa -->
       <main class="flex-1 relative h-full w-full bg-slate-950">
         <div id="map" class="h-full w-full z-0"></div>
         
-        <!-- Botón flotante rápido para ocultar/mostrar panel en móvil -->
         <button onclick="toggleMobileSidebar()" class="md:hidden absolute top-3 left-3 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-2 rounded-xl text-xs text-white shadow-xl flex items-center gap-1.5">
           <i class="fa-solid fa-bars"></i> <span>Panel</span>
         </button>
 
+        <!-- Monitor Coordenadas Admin -->
+        <div id="adminCoordsWidget" class="hidden absolute top-3 right-3 z-10 bg-slate-900/95 border border-rose-500/60 backdrop-blur px-3 py-2 rounded-xl text-xs text-white shadow-2xl flex flex-col gap-1">
+          <span class="font-bold text-rose-400 flex items-center gap-1 text-[11px]"><i class="fa-solid fa-crosshairs"></i> Lat/Lng Último Clic:</span>
+          <code id="adminCoordsText" class="text-amber-300 font-mono text-[10px]">Sin clics aún</code>
+        </div>
+
         <div class="absolute bottom-4 right-4 z-10 bg-slate-900/90 border border-slate-700 backdrop-blur px-3 py-1.5 rounded-lg text-[11px] text-slate-300 shadow-xl flex items-center gap-2">
           <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>@manzana</span>
+          <span>IES Fernando de Herrera</span>
         </div>
       </main>
+    </div>
+
+    <!-- MODAL AUTENTICACIÓN ADMIN -->
+    <div id="adminAuthModal" class="modal">
+      <div class="bg-slate-800 border border-rose-500/50 text-slate-100 p-6 rounded-2xl w-80 max-w-sm shadow-2xl text-center">
+        <div class="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-rose-500/30">
+          <i class="fa-solid fa-lock text-xl"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-white mb-1">Acceso Modo Admin</h3>
+        <p class="text-xs text-slate-400 mb-4">Introduce la contraseña de administración:</p>
+        <input type="password" id="adminPasswordInput" placeholder="Contraseña..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-center text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500 mb-3" />
+        <p id="adminAuthError" class="hidden text-xs text-rose-400 font-bold mb-3">❌ Contraseña Incorrecta</p>
+        <div class="flex gap-2">
+          <button onclick="verifyAdminPassword()" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow">Acceder</button>
+          <button onclick="closeModals()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-lg text-xs transition">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PANEL CONTROL ADMIN COMPLETO -->
+    <div id="adminPanelModal" class="modal">
+      <div class="bg-slate-800 border border-slate-700 text-slate-100 p-6 rounded-2xl w-11/12 max-w-3xl shadow-2xl tier-container">
+        <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
+          <h2 class="text-base font-extrabold text-rose-400 flex items-center gap-2">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Panel de Control de Administración
+          </h2>
+          <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Pestañas Admin -->
+        <div class="flex gap-2 border-b border-slate-700 pb-2 mb-4 overflow-x-auto">
+          <button onclick="switchAdminTab('tabVisual')" id="btnTabVisual" class="admin-tab-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">👁️ Modo Dios (Polígonos)</button>
+          <button onclick="switchAdminTab('tabAdd')" id="btnTabAdd" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">➕ Añadir Elemento</button>
+          <button onclick="switchAdminTab('tabCheats')" id="btnTabCheats" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">⚡ Cheats & Puntos</button>
+          <button onclick="switchAdminTab('tabData')" id="btnTabData" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">💾 Import/Export JSON</button>
+        </div>
+
+        <!-- Pestaña 1: Modo Dios -->
+        <div id="tabVisual" class="admin-tab-content space-y-4">
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-white mb-1">Visualizar Polígonos de Detección (Modo Dios)</h4>
+              <p class="text-[11px] text-slate-400">Hace visibles sobre el mapa todas las áreas transparentes usadas por Turf.js para validar GeoGuessr.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="togglePolygonsCheckbox" onchange="toggleAdminPolygons(this.checked)" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pestaña 2: Añadir Elemento -->
+        <div id="tabAdd" class="admin-tab-content hidden space-y-3">
+          <p class="text-xs text-slate-300">Añade dinámicamente un punto personalizado a la base de datos de la sesión actual:</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Nombre del Elemento:</label>
+              <input type="text" id="addName" placeholder="Ej: Sevilla" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Categoría:</label>
+              <input type="text" id="addCat" placeholder="Ej: Ciudad" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Mapa:</label>
+              <select id="addDataset" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+                <option value="world_phys">Físico</option>
+                <option value="world_pol">Político</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Coordenadas (Lat / Lng):</label>
+              <div class="flex gap-2">
+                <input type="number" step="any" id="addLat" placeholder="Lat (37.38)" class="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                <input type="number" step="any" id="addLng" placeholder="Lng (-5.98)" class="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+              </div>
+            </div>
+          </div>
+          <button onclick="addCustomItemFromAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5 mt-2">
+            <i class="fa-solid fa-plus"></i> Guardar Elemento en el Juego
+          </button>
+        </div>
+
+        <!-- Pestaña 3: Cheats -->
+        <div id="tabCheats" class="admin-tab-content hidden space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+              <h4 class="text-xs font-bold text-amber-400 mb-2">GeoGuessr Cheats</h4>
+              <div class="flex gap-2">
+                <button onclick="adminAddGeoGuessrPoints(1000)" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs">+1000 Pts</button>
+                <button onclick="adminAddGeoGuessrStreak(5)" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs">+5 Racha</button>
+              </div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+              <h4 class="text-xs font-bold text-emerald-400 mb-2">Práctica Cheats</h4>
+              <button onclick="adminAddPracticePoints(500)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs">+500 Pts Práctica</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestaña 4: Import / Export -->
+        <div id="tabData" class="admin-tab-content hidden space-y-3">
+          <div class="flex gap-2">
+            <button onclick="exportDatasetJSON()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow">
+              <i class="fa-solid fa-download"></i> Exportar Dataset (JSON)
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal Guardar Puntuación -->
@@ -358,9 +480,8 @@
           </h2>
           <button onclick="closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real con todo el curso (+100 personas). Se muestra el mejor récord por estudiante.</p>
+        <p class="text-xs text-slate-400 mb-4">Sincronizado en tiempo real. Se muestra el mejor récord por estudiante.</p>
         
-        <!-- Selectores Duales (Mapa + Modo de Juego) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1">Mapamundi (Físico / Político):</label>
@@ -404,10 +525,22 @@
     </div>
 
     <script>
-      // URL DE GOOGLE APPS SCRIPT
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
 
-      // BASE DE DATOS COMPLETA DE GEOGRAFÍA (FÍSICO Y POLÍTICO)
+      // MAPAS DE FONDO CON CLAVE CARTO VOYAGER PARA EL POLÍTICO
+      const TILE_LAYERS = {
+        world_phys: {
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics'
+        },
+        world_pol: {
+          url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_3u0c_1_039ef37ceffae3a2c3aced0b',
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd'
+        }
+      };
+
+      // BASE DE DATOS COMPLETA
       const DATASETS = {
         world_phys: {
           title: "Mapamundi Físico",
@@ -415,70 +548,214 @@
           zoom: 2,
           items: [
             // CORDILLERAS Y PICOS
-            { name: "Cordillera de los Alpes", cat: "Cordilleras", lat: 46.88, lng: 9.65 },
-            { name: "Montes Escandinavos", cat: "Cordilleras", lat: 62.00, lng: 9.50 },
-            { name: "Cordillera del Cáucaso", cat: "Cordilleras", lat: 42.65, lng: 44.27 },
-            { name: "Montes Urales", cat: "Cordilleras", lat: 60.00, lng: 60.00 },
-            { name: "Cordillera del Himalaya", cat: "Cordilleras", lat: 28.00, lng: 84.00 },
-            { name: "Cordillera Divisoria", cat: "Cordilleras", lat: -25.00, lng: 147.00 },
-            { name: "Cordillera de los Andes", cat: "Cordilleras", lat: -21.00, lng: -68.00 },
-            { name: "Montañas Rocosas", cat: "Cordilleras", lat: 39.00, lng: -105.50 },
-            { name: "Sierra Madre", cat: "Cordilleras", lat: 24.00, lng: -102.00 },
-            { name: "Montes Apalaches", cat: "Cordilleras", lat: 37.50, lng: -80.00 },
-            { name: "Cordillera del Atlas", cat: "Cordilleras", lat: 31.50, lng: -6.00 },
-            { name: "Everest", cat: "Picos", lat: 27.9881, lng: 86.9250 },
-            { name: "Mont Blanc", cat: "Picos", lat: 45.8326, lng: 6.8652 },
-            { name: "Elbrus", cat: "Picos", lat: 43.3499, lng: 42.4453 },
-            { name: "Kilimanjaro", cat: "Picos", lat: -3.0674, lng: 37.3556 },
-            { name: "Aconcagua", cat: "Picos", lat: -32.6532, lng: -70.0109 },
-            { name: "Mont McKinley (Denali)", cat: "Picos", lat: 63.0692, lng: -151.0070 },
+            { 
+              name: "Cordillera de los Alpes", cat: "Cordilleras", lat: 46.88, lng: 9.65,
+              polygon: [[43.5, 7.0], [45.5, 6.0], [47.5, 10.0], [47.5, 15.0], [45.5, 14.0], [44.0, 9.5], [43.5, 7.0]]
+            },
+            { 
+              name: "Montes Escandinavos", cat: "Cordilleras", lat: 62.00, lng: 9.50,
+              polygon: [[58.0, 6.0], [62.0, 5.0], [68.0, 14.0], [69.5, 20.0], [65.0, 16.0], [60.0, 10.0], [58.0, 6.0]]
+            },
+            { 
+              name: "Cordillera del Cáucaso", cat: "Cordilleras", lat: 42.65, lng: 44.27,
+              polygon: [[44.5, 37.5], [42.0, 48.0], [40.5, 49.5], [43.0, 40.0], [44.5, 37.5]]
+            },
+            { 
+              name: "Montes Urales", cat: "Cordilleras", lat: 60.00, lng: 60.00,
+              polygon: [[68.0, 66.0], [68.0, 62.0], [52.0, 55.0], [51.0, 59.0], [68.0, 66.0]]
+            },
+            { 
+              name: "Cordillera del Himalaya", cat: "Cordilleras", lat: 28.00, lng: 84.00,
+              polygon: [[35.0, 74.0], [32.0, 78.0], [28.0, 85.0], [27.0, 93.0], [29.0, 95.0], [31.0, 88.0], [36.0, 77.0], [35.0, 74.0]]
+            },
+            { 
+              name: "Cordillera Divisoria", cat: "Cordilleras", lat: -25.00, lng: 147.00,
+              polygon: [[-16.0, 144.0], [-25.0, 148.0], [-37.0, 148.0], [-38.0, 142.0], [-34.0, 149.0], [-20.0, 146.0], [-16.0, 144.0]]
+            },
+            { 
+              name: "Cordillera de los Andes", cat: "Cordilleras", lat: -21.00, lng: -68.00,
+              polygon: [[10.0, -73.0], [-5.0, -78.0], [-20.0, -70.0], [-35.0, -71.0], [-53.0, -71.0], [-52.0, -68.0], [-33.0, -69.0], [-15.0, -68.0], [5.0, -72.0], [10.0, -73.0]]
+            },
+            { 
+              name: "Montañas Rocosas", cat: "Cordilleras", lat: 39.00, lng: -105.50,
+              polygon: [[60.0, -125.0], [50.0, -115.0], [40.0, -106.0], [35.0, -105.0], [36.0, -108.0], [45.0, -112.0], [58.0, -123.0], [60.0, -125.0]]
+            },
+            { 
+              name: "Sierra Madre", cat: "Cordilleras", lat: 24.00, lng: -102.00,
+              polygon: [[30.0, -109.0], [20.0, -98.0], [16.0, -93.0], [17.0, -100.0], [28.0, -108.0], [30.0, -109.0]]
+            },
+            { 
+              name: "Montes Apalaches", cat: "Cordilleras", lat: 37.50, lng: -80.00,
+              polygon: [[46.0, -70.0], [40.0, -76.0], [34.0, -85.0], [33.0, -87.0], [37.0, -82.0], [44.0, -73.0], [46.0, -70.0]]
+            },
+            { 
+              name: "Cordillera del Atlas", cat: "Cordilleras", lat: 31.50, lng: -6.00,
+              polygon: [[30.0, -9.5], [32.0, -7.0], [36.0, 3.0], [37.0, 9.0], [34.0, 9.0], [30.0, -4.0], [30.0, -9.5]]
+            },
 
-            // MESETAS, LLANURAS Y DESIERTOS
-            { name: "Meseta del Irán", cat: "Mesetas y Macizos", lat: 32.00, lng: 53.00 },
-            { name: "Meseta de Siberia Central", cat: "Mesetas y Macizos", lat: 65.00, lng: 100.00 },
-            { name: "Meseta del Tibet", cat: "Mesetas y Macizos", lat: 33.00, lng: 88.00 },
-            { name: "Macizo o Meseta Etiópico", cat: "Mesetas y Macizos", lat: 9.00, lng: 39.00 },
-            { name: "Meseta del Mato Grosso", cat: "Mesetas y Macizos", lat: -14.00, lng: -56.00 },
-            { name: "Escudo Canadiense", cat: "Mesetas y Macizos", lat: 54.00, lng: -80.00 },
-            { name: "Gran Llanura Europea", cat: "Llanuras y Desiertos", lat: 52.00, lng: 18.00 },
-            { name: "Llanura Rusa (ó Europa Oriental)", cat: "Llanuras y Desiertos", lat: 55.00, lng: 40.00 },
-            { name: "Llanura de Siberia Occ.", cat: "Llanuras y Desiertos", lat: 60.00, lng: 75.00 },
-            { name: "Desierto Arábigo", cat: "Llanuras y Desiertos", lat: 23.00, lng: 46.00 },
-            { name: "Desierto de Gobi", cat: "Llanuras y Desiertos", lat: 42.50, lng: 103.00 },
-            { name: "Gran Desierto Victoria", cat: "Llanuras y Desiertos", lat: -29.10, lng: 129.20 },
-            { name: "Desierto del Sahara", cat: "Llanuras y Desiertos", lat: 23.00, lng: 12.00 },
-            { name: "Desierto del Kalahari", cat: "Llanuras y Desiertos", lat: -23.00, lng: 22.00 },
-            { name: "Desierto de Atacama", cat: "Llanuras y Desiertos", lat: -23.50, lng: -69.00 },
-            { name: "Cuenca del Congo", cat: "Llanuras y Desiertos", lat: -1.00, lng: 22.00 },
-            { name: "Llanura de la Pampa", cat: "Llanuras y Desiertos", lat: -35.00, lng: -62.00 },
-            { name: "Llanura de la Patagonia", cat: "Llanuras y Desiertos", lat: -45.00, lng: -69.00 },
-            { name: "Llanura Amazónica", cat: "Llanuras y Desiertos", lat: -3.00, lng: -62.00 },
+            { name: "Pico Everest", cat: "Picos", lat: 27.9881, lng: 86.9250 },
+            { name: "Pico Mont Blanc", cat: "Picos", lat: 45.8326, lng: 6.8652 },
+            { name: "Pico Elbrus", cat: "Picos", lat: 43.3499, lng: 42.4453 },
+            { name: "Volcán Kilimanjaro", cat: "Picos", lat: -3.0674, lng: 37.3556 },
+            { name: "Pico Aconcagua", cat: "Picos", lat: -32.6532, lng: -70.0109 },
+            { name: "Pico Denali (McKinley)", cat: "Picos", lat: 63.0692, lng: -151.0070 },
 
-            // PENÍNSULAS E ISLAS
-            { name: "Ibérica", cat: "Penínsulas", lat: 40.00, lng: -4.00 },
-            { name: "Escandinava", cat: "Penínsulas", lat: 61.00, lng: 15.00 },
-            { name: "Balcánica", cat: "Penínsulas", lat: 42.00, lng: 22.00 },
-            { name: "Arábiga", cat: "Penínsulas", lat: 23.00, lng: 47.00 },
-            { name: "del Indostán", cat: "Penínsulas", lat: 20.00, lng: 78.00 },
-            { name: "de Indochina", cat: "Penínsulas", lat: 15.00, lng: 101.00 },
-            { name: "de Corea", cat: "Penínsulas", lat: 37.50, lng: 127.00 },
-            { name: "de Somalia", cat: "Penínsulas", lat: 6.00, lng: 47.00 },
-            { name: "de Labrador", cat: "Penínsulas", lat: 54.00, lng: -66.00 },
-            { name: "Gran Bretaña", cat: "Islas y Archipiélagos", lat: 54.00, lng: -2.00 },
-            { name: "Islandia", cat: "Islas y Archipiélagos", lat: 64.90, lng: -18.50 },
-            { name: "Archipiélago del Japón", cat: "Islas y Archipiélagos", lat: 36.20, lng: 138.20 },
-            { name: "Archipiélago de Filipinas", cat: "Islas y Archipiélagos", lat: 12.80, lng: 121.70 },
-            { name: "Borneo", cat: "Islas y Archipiélagos", lat: 1.00, lng: 114.00 },
-            { name: "Sumatra", cat: "Islas y Archipiélagos", lat: 0.00, lng: 102.00 },
-            { name: "Java", cat: "Islas y Archipiélagos", lat: -7.50, lng: 110.00 },
+            // MESETAS Y DESIERTOS
+            { 
+              name: "Meseta del Irán", cat: "Mesetas y Macizos", lat: 32.00, lng: 53.00,
+              polygon: [[26.0, 48.0], [38.0, 48.0], [35.0, 65.0], [25.0, 65.0], [26.0, 48.0]]
+            },
+            { 
+              name: "Meseta de Siberia Central", cat: "Mesetas y Macizos", lat: 65.00, lng: 100.00,
+              polygon: [[58.0, 88.0], [70.0, 88.0], [70.0, 118.0], [58.0, 118.0], [58.0, 88.0]]
+            },
+            { 
+              name: "Meseta del Tibet", cat: "Mesetas y Macizos", lat: 33.00, lng: 88.00,
+              polygon: [[36.0, 78.0], [36.0, 98.0], [28.0, 98.0], [28.0, 80.0], [36.0, 78.0]]
+            },
+            { 
+              name: "Macizo Etiópico", cat: "Mesetas y Macizos", lat: 9.00, lng: 39.00,
+              polygon: [[14.0, 36.0], [14.0, 42.0], [5.0, 42.0], [5.0, 36.0], [14.0, 36.0]]
+            },
+            { 
+              name: "Meseta del Mato Grosso", cat: "Mesetas y Macizos", lat: -14.00, lng: -56.00,
+              polygon: [[-10.0, -60.0], [-10.0, -50.0], [-18.0, -50.0], [-18.0, -60.0], [-10.0, -60.0]]
+            },
+            { 
+              name: "Escudo Canadiense", cat: "Mesetas y Macizos", lat: 54.00, lng: -80.00,
+              polygon: [[50.0, -100.0], [65.0, -100.0], [65.0, -60.0], [50.0, -60.0], [50.0, -100.0]]
+            },
+            { 
+              name: "Gran Llanura Europea", cat: "Llanuras y Desiertos", lat: 52.00, lng: 18.00,
+              polygon: [[50.0, 1.0], [54.0, 10.0], [55.0, 25.0], [48.0, 25.0], [48.0, 5.0], [50.0, 1.0]]
+            },
+            { 
+              name: "Llanura Rusa", cat: "Llanuras y Desiertos", lat: 55.00, lng: 40.00,
+              polygon: [[45.0, 30.0], [65.0, 30.0], [65.0, 60.0], [45.0, 60.0], [45.0, 30.0]]
+            },
+            { 
+              name: "Llanura de Siberia Occidental", cat: "Llanuras y Desiertos", lat: 60.00, lng: 75.00,
+              polygon: [[55.0, 60.0], [72.0, 60.0], [72.0, 88.0], [55.0, 88.0], [55.0, 60.0]]
+            },
+            { 
+              name: "Desierto Arábigo", cat: "Llanuras y Desiertos", lat: 23.00, lng: 46.00,
+              polygon: [[18.0, 40.0], [30.0, 38.0], [28.0, 50.0], [18.0, 54.0], [18.0, 40.0]]
+            },
+            { 
+              name: "Desierto de Gobi", cat: "Llanuras y Desiertos", lat: 42.50, lng: 103.00,
+              polygon: [[45.0, 93.0], [46.0, 112.0], [40.0, 112.0], [39.0, 95.0], [45.0, 93.0]]
+            },
+            { 
+              name: "Gran Desierto Victoria", cat: "Llanuras y Desiertos", lat: -29.10, lng: 129.20,
+              polygon: [[-26.0, 122.0], [-26.0, 133.0], [-31.0, 133.0], [-31.0, 122.0], [-26.0, 122.0]]
+            },
+            { 
+              name: "Desierto del Sahara", cat: "Llanuras y Desiertos", lat: 23.00, lng: 12.00,
+              polygon: [[31.0, -13.0], [32.0, 25.0], [30.0, 34.0], [15.0, 36.0], [15.0, 10.0], [18.0, -16.0], [31.0, -13.0]]
+            },
+            { 
+              name: "Desierto del Kalahari", cat: "Llanuras y Desiertos", lat: -23.00, lng: 22.00,
+              polygon: [[-20.0, 18.0], [-20.0, 27.0], [-27.0, 27.0], [-27.0, 18.0], [-20.0, 18.0]]
+            },
+            { 
+              name: "Desierto de Atacama", cat: "Llanuras y Desiertos", lat: -23.50, lng: -69.00,
+              polygon: [[-18.0, -70.5], [-18.0, -68.5], [-27.0, -69.0], [-27.0, -71.0], [-18.0, -70.5]]
+            },
+            { 
+              name: "Cuenca del Congo", cat: "Llanuras y Desiertos", lat: -1.00, lng: 22.00,
+              polygon: [[-6.0, 15.0], [5.0, 15.0], [5.0, 30.0], [-6.0, 30.0], [-6.0, 15.0]]
+            },
+            { 
+              name: "Llanura de la Pampa", cat: "Llanuras y Desiertos", lat: -35.00, lng: -62.00,
+              polygon: [[-39.0, -66.0], [-30.0, -66.0], [-30.0, -57.0], [-39.0, -57.0], [-39.0, -66.0]]
+            },
+            { 
+              name: "Llanura de la Patagonia", cat: "Llanuras y Desiertos", lat: -45.00, lng: -69.00,
+              polygon: [[-53.0, -72.0], [-39.0, -72.0], [-39.0, -62.0], [-53.0, -62.0], [-53.0, -72.0]]
+            },
+            { 
+              name: "Llanura Amazónica", cat: "Llanuras y Desiertos", lat: -3.00, lng: -62.00,
+              polygon: [[3.0, -70.0], [2.0, -50.0], [-10.0, -50.0], [-12.0, -70.0], [3.0, -70.0]]
+            },
+
+            // PENÍNSULAS
+            { 
+              name: "Península Ibérica", cat: "Penínsulas", lat: 40.00, lng: -4.00,
+              polygon: [[43.8, -9.3], [43.6, -3.5], [42.5, 3.2], [36.7, 3.3], [36.0, -5.6], [37.0, -9.0], [43.8, -9.3]]
+            },
+            { 
+              name: "Península Escandinava", cat: "Penínsulas", lat: 61.00, lng: 15.00,
+              polygon: [[55.3, 12.0], [58.0, 5.0], [62.0, 4.5], [69.0, 15.0], [71.2, 28.0], [66.0, 24.0], [60.0, 18.0], [56.0, 13.0], [55.3, 12.0]]
+            },
+            { 
+              name: "Península Balcánica", cat: "Penínsulas", lat: 42.00, lng: 22.00,
+              polygon: [[45.5, 13.8], [45.0, 20.0], [45.2, 29.5], [41.0, 29.0], [38.0, 24.0], [36.4, 22.5], [39.5, 20.0], [42.5, 19.0], [45.5, 13.8]]
+            },
+            { 
+              name: "Península Arábiga", cat: "Penínsulas", lat: 23.00, lng: 47.00,
+              polygon: [[30.0, 32.5], [30.0, 48.0], [25.0, 57.0], [16.5, 53.0], [12.6, 43.5], [28.0, 34.5], [30.0, 32.5]]
+            },
+            { 
+              name: "Península del Indostán", cat: "Penínsulas", lat: 20.00, lng: 78.00,
+              polygon: [[25.0, 68.0], [28.0, 78.0], [22.0, 89.0], [15.0, 80.0], [8.0, 77.5], [15.0, 73.0], [25.0, 68.0]]
+            },
+            { 
+              name: "Península de Indochina", cat: "Penínsulas", lat: 15.00, lng: 101.00,
+              polygon: [[22.0, 98.0], [22.0, 108.0], [11.0, 109.0], [8.0, 104.0], [14.0, 98.0], [22.0, 98.0]]
+            },
+            { 
+              name: "Península de Corea", cat: "Penínsulas", lat: 37.50, lng: 127.00,
+              polygon: [[40.0, 124.0], [40.0, 130.0], [35.0, 129.5], [34.3, 126.0], [37.5, 126.0], [40.0, 124.0]]
+            },
+            { 
+              name: "Península de Somalia", cat: "Penínsulas", lat: 6.00, lng: 47.00,
+              polygon: [[12.0, 43.5], [12.0, 51.5], [5.0, 48.5], [1.0, 41.5], [9.0, 43.0], [12.0, 43.5]]
+            },
+            { 
+              name: "Península de Labrador", cat: "Penínsulas", lat: 54.00, lng: -66.00,
+              polygon: [[60.0, -65.0], [58.0, -62.0], [52.0, -55.0], [50.0, -66.0], [55.0, -78.0], [62.0, -78.0], [60.0, -65.0]]
+            },
+
+            // ISLAS Y ARCHIPIÉLAGOS
+            { 
+              name: "Isla de Gran Bretaña", cat: "Islas y Archipiélagos", lat: 54.00, lng: -2.00,
+              polygon: [[50.0, -5.5], [51.5, 1.5], [58.5, -3.0], [58.0, -5.5], [54.0, -3.5], [50.0, -5.5]]
+            },
+            { 
+              name: "Islandia", cat: "Islas y Archipiélagos", lat: 64.90, lng: -18.50,
+              polygon: [[63.4, -24.5], [66.5, -24.5], [66.5, -13.5], [63.4, -13.5], [63.4, -24.5]]
+            },
+            { 
+              name: "Archipiélago del Japón", cat: "Islas y Archipiélagos", lat: 36.20, lng: 138.20,
+              polygon: [[30.5, 130.0], [35.0, 135.0], [45.5, 145.5], [42.0, 140.0], [33.0, 129.5], [30.5, 130.0]]
+            },
+            { 
+              name: "Archipiélago de Filipinas", cat: "Islas y Archipiélagos", lat: 12.80, lng: 121.70,
+              polygon: [[5.0, 119.0], [19.0, 121.0], [19.0, 127.0], [5.0, 127.0], [5.0, 119.0]]
+            },
+            { 
+              name: "Isla de Borneo", cat: "Islas y Archipiélagos", lat: 1.00, lng: 114.00,
+              polygon: [[-4.0, 109.0], [7.0, 117.0], [5.0, 119.0], [-1.0, 117.0], [-4.0, 109.0]]
+            },
+            { name: "Isla de Sumatra", cat: "Islas y Archipiélagos", lat: 0.00, lng: 102.00 },
+            { name: "Isla de Java", cat: "Islas y Archipiélagos", lat: -7.50, lng: 110.00 },
             { name: "Nueva Zelanda", cat: "Islas y Archipiélagos", lat: -41.00, lng: 174.00 },
-            { name: "Nueva Guinea", cat: "Islas y Archipiélagos", lat: -5.00, lng: 140.00 },
-            { name: "Madagascar", cat: "Islas y Archipiélagos", lat: -19.00, lng: 47.00 },
-            { name: "Cuba", cat: "Islas y Archipiélagos", lat: 21.50, lng: -79.50 },
-            { name: "Groenlandia", cat: "Islas y Archipiélagos", lat: 72.00, lng: -40.00 },
-            { name: "Islas Antillas", cat: "Islas y Archipiélagos", lat: 18.00, lng: -68.00 },
+            { name: "Isla de Nueva Guinea", cat: "Islas y Archipiélagos", lat: -5.00, lng: 140.00 },
+            { 
+              name: "Isla de Madagascar", cat: "Islas y Archipiélagos", lat: -19.00, lng: 47.00,
+              polygon: [[-12.0, 49.0], [-16.0, 50.5], [-25.5, 47.0], [-25.0, 44.0], [-17.0, 44.0], [-12.0, 49.0]]
+            },
+            { 
+              name: "Isla de Cuba", cat: "Islas y Archipiélagos", lat: 21.50, lng: -79.50,
+              polygon: [[20.0, -85.0], [23.5, -80.0], [20.0, -74.0], [19.8, -77.0], [20.0, -85.0]]
+            },
+            { 
+              name: "Groenlandia", cat: "Islas y Archipiélagos", lat: 72.00, lng: -40.00,
+              polygon: [[60.0, -45.0], [70.0, -22.0], [82.0, -20.0], [82.0, -60.0], [75.0, -60.0], [60.0, -45.0]]
+            },
+            { name: "Archipiélago de las Antillas", cat: "Islas y Archipiélagos", lat: 18.00, lng: -68.00 },
 
-            // CABOS, ESTRECHOS, OCÉANOS, MARES Y RÍOS
+            // CABOS Y ESTRECHOS
             { name: "Cabo de Buena Esperanza", cat: "Cabos y Estrechos", lat: -34.35, lng: 18.47 },
             { name: "Cabo de Hornos", cat: "Cabos y Estrechos", lat: -55.98, lng: -67.27 },
             { name: "Estrecho de Gibraltar", cat: "Cabos y Estrechos", lat: 35.96, lng: -5.60 },
@@ -489,48 +766,88 @@
             { name: "Golfo de Bengala", cat: "Cabos y Estrechos", lat: 15.00, lng: 88.00 },
             { name: "Golfo de Guinea", cat: "Cabos y Estrechos", lat: 1.00, lng: 2.00 },
             { name: "Golfo de México", cat: "Cabos y Estrechos", lat: 25.00, lng: -90.00 },
-            { name: "Atlántico", cat: "Océanos", lat: 25.00, lng: -40.00 },
-            { name: "Pacífico", cat: "Océanos", lat: 0.00, lng: -160.00 },
-            { name: "Índico", cat: "Océanos", lat: -20.00, lng: 80.00 },
-            { name: "Glacial Ártico", cat: "Océanos", lat: 82.00, lng: 0.00 },
-            { name: "Glacial Antártico", cat: "Océanos", lat: -65.00, lng: 0.00 },
-            { name: "del Coral", cat: "Mares", lat: -18.00, lng: 152.00 },
-            { name: "Arábigo", cat: "Mares", lat: 15.00, lng: 65.00 },
-            { name: "de la China Meridional", cat: "Mares", lat: 12.00, lng: 113.00 },
-            { name: "Caribe o de las Antillas", cat: "Mares", lat: 15.00, lng: -75.00 },
-            { name: "Mediterráneo", cat: "Mares", lat: 35.00, lng: 18.00 },
-            { name: "de Noruega", cat: "Mares", lat: 68.00, lng: 2.00 },
-            { name: "del Japón", cat: "Mares", lat: 40.00, lng: 135.00 },
-            { name: "del Norte", cat: "Mares", lat: 56.00, lng: 3.00 },
-            { name: "Negro", cat: "Mares", lat: 43.00, lng: 35.00 },
-            { name: "Rojo", cat: "Mares", lat: 20.00, lng: 38.00 },
-            { name: "Amazonas", cat: "Ríos", lat: -3.46, lng: -62.21 },
-            { name: "Mississippi-Missouri", cat: "Ríos", lat: 37.00, lng: -89.00 },
-            { name: "Paraná", cat: "Ríos", lat: -27.50, lng: -58.80 },
-            { name: "Orinoco", cat: "Ríos", lat: 8.00, lng: -63.00 },
-            { name: "Yang-Tseu-Kiang (Chang Jiang o Azul)", cat: "Ríos", lat: 30.50, lng: 114.30 },
-            { name: "Yenisei", cat: "Ríos", lat: 61.00, lng: 90.00 },
-            { name: "Obi", cat: "Ríos", lat: 61.00, lng: 69.00 },
-            { name: "Indo", cat: "Ríos", lat: 26.00, lng: 68.00 },
-            { name: "Hoang-he o Amarillo", cat: "Ríos", lat: 36.00, lng: 110.00 },
-            { name: "Lena", cat: "Ríos", lat: 62.00, lng: 129.00 },
-            { name: "Mekong", cat: "Ríos", lat: 16.00, lng: 105.00 },
-            { name: "Ganges", cat: "Ríos", lat: 25.00, lng: 83.00 },
-            { name: "Níger", cat: "Ríos", lat: 13.00, lng: 2.00 },
-            { name: "Nilo", cat: "Ríos", lat: 26.82, lng: 30.80 },
-            { name: "Congo", cat: "Ríos", lat: -2.00, lng: 22.00 },
-            { name: "Zambeze", cat: "Ríos", lat: -15.00, lng: 28.00 },
-            { name: "Murray", cat: "Ríos", lat: -35.00, lng: 143.00 },
-            { name: "Volga", cat: "Ríos", lat: 53.00, lng: 48.00 },
-            { name: "Danubio", cat: "Ríos", lat: 45.00, lng: 20.00 },
-            { name: "Mar Caspio", cat: "Lagos", lat: 41.93, lng: 50.66 },
-            { name: "Superior", cat: "Lagos", lat: 47.70, lng: -87.50 },
-            { name: "Victoria", cat: "Lagos", lat: -1.00, lng: 33.00 },
-            { name: "Hurón", cat: "Lagos", lat: 44.80, lng: -82.40 },
-            { name: "Míchigan", cat: "Lagos", lat: 44.00, lng: -87.00 },
-            { name: "Tanganika", cat: "Lagos", lat: -6.00, lng: 29.50 },
-            { name: "Baikal", cat: "Lagos", lat: 53.50, lng: 108.00 },
-            { name: "Mar de Aral", cat: "Lagos", lat: 45.00, lng: 59.00 }
+
+            // OCÉANOS CON POLÍGONOS COBERTURA COMPLETA
+            { 
+              name: "Océano Atlántico", cat: "Océanos", lat: 25.00, lng: -40.00,
+              polygon: [
+                [70.0, -75.0], [70.0, 10.0], [60.0, -10.0], [35.0, -10.0], 
+                [5.0, 10.0], [-35.0, 20.0], [-60.0, 20.0], [-60.0, -65.0], 
+                [-35.0, -50.0], [0.0, -45.0], [15.0, -75.0], [25.0, -80.0], 
+                [45.0, -65.0], [70.0, -75.0]
+              ]
+            },
+            { 
+              name: "Océano Pacífico", cat: "Océanos", lat: 0.00, lng: -140.00,
+              polygon: [
+                [65.0, -179.0], [65.0, 140.0], [30.0, 120.0], [0.0, 125.0], 
+                [-45.0, 115.0], [-60.0, 140.0], [-60.0, -70.0], [-20.0, -70.0], 
+                [10.0, -85.0], [30.0, -115.0], [55.0, -160.0], [65.0, -179.0]
+              ]
+            },
+            { 
+              name: "Océano Índico", cat: "Océanos", lat: -20.00, lng: 80.00,
+              polygon: [
+                [25.0, 50.0], [25.0, 95.0], [10.0, 100.0], [-10.0, 120.0], 
+                [-35.0, 115.0], [-60.0, 115.0], [-60.0, 20.0], [-35.0, 20.0], 
+                [-10.0, 40.0], [12.0, 43.0], [25.0, 50.0]
+              ]
+            },
+            { name: "Océano Glacial Ártico", cat: "Océanos", lat: 82.00, lng: 0.00 },
+            { name: "Océano Glacial Antártico", cat: "Océanos", lat: -65.00, lng: 0.00 },
+
+            // MARES
+            { name: "Mar del Coral", cat: "Mares", lat: -18.00, lng: 152.00 },
+            { name: "Mar Arábigo", cat: "Mares", lat: 15.00, lng: 65.00 },
+            { name: "Mar de la China Meridional", cat: "Mares", lat: 12.00, lng: 113.00 },
+            { name: "Mar Caribe", cat: "Mares", lat: 15.00, lng: -75.00 },
+            { 
+              name: "Mar Mediterráneo", cat: "Mares", lat: 35.00, lng: 18.00,
+              polygon: [[36.0, -5.0], [42.0, 3.0], [45.0, 13.0], [40.0, 23.0], [36.0, 36.0], [31.0, 34.0], [31.0, 10.0], [36.0, 1.0], [36.0, -5.0]]
+            },
+            { name: "Mar de Noruega", cat: "Mares", lat: 68.00, lng: 2.00 },
+            { name: "Mar del Japón", cat: "Mares", lat: 40.00, lng: 135.00 },
+            { name: "Mar del Norte", cat: "Mares", lat: 56.00, lng: 3.00 },
+            { 
+              name: "Mar Negro", cat: "Mares", lat: 43.00, lng: 35.00,
+              polygon: [[41.0, 28.0], [47.0, 30.0], [47.0, 41.0], [41.0, 41.0], [41.0, 28.0]]
+            },
+            { 
+              name: "Mar Rojo", cat: "Mares", lat: 20.00, lng: 38.00,
+              polygon: [[28.0, 32.5], [30.0, 32.5], [20.0, 40.0], [12.5, 43.5], [15.0, 42.0], [28.0, 32.5]]
+            },
+
+            // RÍOS Y LAGOS
+            { name: "Río Amazonas", cat: "Ríos", lat: -3.46, lng: -62.21 },
+            { name: "Río Mississippi-Missouri", cat: "Ríos", lat: 37.00, lng: -89.00 },
+            { name: "Río Paraná", cat: "Ríos", lat: -27.50, lng: -58.80 },
+            { name: "Río Orinoco", cat: "Ríos", lat: 8.00, lng: -63.00 },
+            { name: "Río Yangtsé (Azul)", cat: "Ríos", lat: 30.50, lng: 114.30 },
+            { name: "Río Yeniséi", cat: "Ríos", lat: 61.00, lng: 90.00 },
+            { name: "Río Obi", cat: "Ríos", lat: 61.00, lng: 69.00 },
+            { name: "Río Indo", cat: "Ríos", lat: 26.00, lng: 68.00 },
+            { name: "Río Hoang-he (Amarillo)", cat: "Ríos", lat: 36.00, lng: 110.00 },
+            { name: "Río Lena", cat: "Ríos", lat: 62.00, lng: 129.00 },
+            { name: "Río Mekong", cat: "Ríos", lat: 16.00, lng: 105.00 },
+            { name: "Río Ganges", cat: "Ríos", lat: 25.00, lng: 83.00 },
+            { name: "Río Níger", cat: "Ríos", lat: 13.00, lng: 2.00 },
+            { name: "Río Nilo", cat: "Ríos", lat: 26.82, lng: 30.80 },
+            { name: "Río Congo", cat: "Ríos", lat: -2.00, lng: 22.00 },
+            { name: "Río Zambeze", cat: "Ríos", lat: -15.00, lng: 28.00 },
+            { name: "Río Murray", cat: "Ríos", lat: -35.00, lng: 143.00 },
+            { name: "Río Volga", cat: "Ríos", lat: 53.00, lng: 48.00 },
+            { name: "Río Danubio", cat: "Ríos", lat: 45.00, lng: 20.00 },
+            { 
+              name: "Mar Caspio (Lago)", cat: "Lagos", lat: 41.93, lng: 50.66,
+              polygon: [[36.5, 46.5], [47.0, 46.5], [47.0, 54.5], [36.5, 54.5], [36.5, 46.5]]
+            },
+            { name: "Lago Superior", cat: "Lagos", lat: 47.70, lng: -87.50 },
+            { name: "Lago Victoria", cat: "Lagos", lat: -1.00, lng: 33.00 },
+            { name: "Lago Hurón", cat: "Lagos", lat: 44.80, lng: -82.40 },
+            { name: "Lago Míchigan", cat: "Lagos", lat: 44.00, lng: -87.00 },
+            { name: "Lago Tanganika", cat: "Lagos", lat: -6.00, lng: 29.50 },
+            { name: "Lago Baikal", cat: "Lagos", lat: 53.50, lng: 108.00 },
+            { name: "Mar de Aral (Lago)", cat: "Lagos", lat: 45.00, lng: 59.00 }
           ]
         },
 
@@ -564,7 +881,10 @@
 
             // AMÉRICA
             { name: "Canadá", cat: "País (América)", lat: 56.13, lng: -106.34 },
-            { name: "Estados Unidos", cat: "País (América)", lat: 37.09, lng: -95.71 },
+            { 
+              name: "Estados Unidos", cat: "País (América)", lat: 37.09, lng: -95.71,
+              polygon: [[49.0, -125.0], [49.0, -67.0], [25.0, -80.0], [30.0, -120.0], [49.0, -125.0]]
+            },
             { name: "México", cat: "País (América)", lat: 23.63, lng: -102.55 },
             { name: "Guatemala", cat: "País (América)", lat: 15.78, lng: -90.23 },
             { name: "Cuba", cat: "País (América)", lat: 21.52, lng: -77.78 },
@@ -573,8 +893,14 @@
             { name: "Perú", cat: "País (América)", lat: -9.19, lng: -75.01 },
             { name: "Ecuador", cat: "País (América)", lat: -1.83, lng: -78.18 },
             { name: "Chile", cat: "País (América)", lat: -35.67, lng: -71.54 },
-            { name: "Brasil", cat: "País (América)", lat: -14.23, lng: -51.92 },
-            { name: "Argentina", cat: "País (América)", lat: -38.41, lng: -63.61 },
+            { 
+              name: "Brasil", cat: "País (América)", lat: -14.23, lng: -51.92,
+              polygon: [[5.0, -60.0], [5.0, -45.0], [-10.0, -35.0], [-33.0, -53.0], [-20.0, -58.0], [-10.0, -70.0], [5.0, -60.0]]
+            },
+            { 
+              name: "Argentina", cat: "País (América)", lat: -38.41, lng: -63.61,
+              polygon: [[-21.8, -66.0], [-22.0, -62.0], [-26.0, -57.5], [-34.0, -58.0], [-54.8, -68.3], [-55.0, -71.5], [-40.0, -72.0], [-23.0, -68.0], [-21.8, -66.0]]
+            },
             { name: "Paraguay", cat: "País (América)", lat: -23.44, lng: -58.44 },
             { name: "Bolivia", cat: "País (América)", lat: -16.29, lng: -63.58 },
 
@@ -593,7 +919,10 @@
             { name: "Malasia", cat: "País (Asia)", lat: 4.21, lng: 101.97 },
             { name: "Indonesia", cat: "País (Asia)", lat: -0.78, lng: 113.92 },
             { name: "Filipinas", cat: "País (Asia)", lat: 12.87, lng: 121.77 },
-            { name: "China", cat: "País (Asia)", lat: 35.86, lng: 104.19 },
+            { 
+              name: "China", cat: "País (Asia)", lat: 35.86, lng: 104.19,
+              polygon: [[53.0, 120.0], [40.0, 130.0], [22.0, 115.0], [28.0, 98.0], [38.0, 75.0], [48.0, 85.0], [53.0, 120.0]]
+            },
             { name: "Taiwan", cat: "País (Asia)", lat: 23.69, lng: 120.96 },
             { name: "Corea del Sur", cat: "País (Asia)", lat: 35.90, lng: 127.76 },
             { name: "Japón", cat: "País (Asia)", lat: 36.20, lng: 138.25 },
@@ -602,7 +931,10 @@
             { name: "Kazajstán", cat: "País (Asia)", lat: 48.01, lng: 66.92 },
 
             // EUROPA Y OCEANÍA
-            { name: "España", cat: "País (Europa)", lat: 40.46, lng: -3.74 },
+            { 
+              name: "España", cat: "País (Europa)", lat: 40.46, lng: -3.74,
+              polygon: [[43.8, -9.3], [43.6, -3.5], [42.5, 3.2], [36.7, 3.3], [36.0, -5.6], [37.0, -9.0], [43.8, -9.3]]
+            },
             { name: "Italia", cat: "País (Europa)", lat: 41.87, lng: 12.56 },
             { name: "Francia", cat: "País (Europa)", lat: 46.22, lng: 2.21 },
             { name: "Grecia", cat: "País (Europa)", lat: 39.07, lng: 21.82 },
@@ -613,9 +945,15 @@
             { name: "Suiza", cat: "País (Europa)", lat: 46.81, lng: 8.22 },
             { name: "Polonia", cat: "País (Europa)", lat: 51.91, lng: 19.14 },
             { name: "Rumania", cat: "País (Europa)", lat: 45.94, lng: 24.96 },
-            { name: "Rusia", cat: "País (Europa)", lat: 61.52, lng: 105.31 },
+            { 
+              name: "Rusia", cat: "País (Europa)", lat: 61.52, lng: 105.31,
+              polygon: [[70.0, 30.0], [70.0, 180.0], [50.0, 140.0], [50.0, 40.0], [70.0, 30.0]]
+            },
             { name: "Ucrania", cat: "País (Europa)", lat: 48.37, lng: 31.16 },
-            { name: "Australia", cat: "País (Oceanía)", lat: -25.27, lng: 133.77 },
+            { 
+              name: "Australia", cat: "País (Oceanía)", lat: -25.27, lng: 133.77,
+              polygon: [[-10.0, 113.0], [-10.0, 153.0], [-39.0, 153.0], [-39.0, 113.0], [-10.0, 113.0]]
+            },
             { name: "Nueva Zelanda", cat: "País (Oceanía)", lat: -40.90, lng: 174.88 },
             { name: "Papúa-Nueva Guinea", cat: "País (Oceanía)", lat: -6.31, lng: 143.95 },
             { name: "Fidji/Fiji", cat: "País (Oceanía)", lat: -17.71, lng: 178.06 },
@@ -664,7 +1002,10 @@
       };
 
       let map = null;
+      let baseTileLayer = null;
       let markersLayer = null;
+      let adminPolygonsLayer = null;
+
       let currentDatasetKey = 'world_phys';
       let currentMode = 'study';
       let currentQuestionItem = null;
@@ -677,11 +1018,10 @@
       let quizIndex = 0;
       let quizQuestions = [];
 
-      // GeoGuessr variables
+      // GeoGuessr
       let ggScore = 0;
       let ggStreak = 0;
       let ggRound = 0;
-      let ggTotalRounds = 10;
       let ggCurrentPool = [];
       let ggWaitingForNext = false;
       let ggLineLayer = null;
@@ -690,6 +1030,43 @@
 
       let audioCtx = null;
       let isMuted = false;
+
+      // ESTADO MODO ADMIN
+      let isAdminActive = false;
+      let showAdminPolygons = false;
+
+      function getItemWeight(item) {
+        if (item.cat && item.cat.toLowerCase().includes('ciudad')) {
+          return 3;
+        }
+        return 1;
+      }
+
+      function getRandomWeightedItem(itemsList) {
+        if (!itemsList || itemsList.length === 0) return null;
+        const totalWeight = itemsList.reduce((sum, item) => sum + getItemWeight(item), 0);
+        let randomVal = Math.random() * totalWeight;
+        for (const item of itemsList) {
+          const weight = getItemWeight(item);
+          if (randomVal < weight) return item;
+          randomVal -= weight;
+        }
+        return itemsList[itemsList.length - 1];
+      }
+
+      function selectWeightedQuestions(itemsList, count) {
+        const pool = [...itemsList];
+        const selected = [];
+        while (selected.length < count && pool.length > 0) {
+          const item = getRandomWeightedItem(pool);
+          if (item) {
+            selected.push(item);
+            const index = pool.indexOf(item);
+            if (index > -1) pool.splice(index, 1);
+          }
+        }
+        return selected;
+      }
 
       function playAudio(type) {
         if (isMuted) return;
@@ -750,20 +1127,127 @@
 
       function initMap() {
         map = L.map('map', { zoomControl: true }).setView(DATASETS[currentDatasetKey].center, DATASETS[currentDatasetKey].zoom);
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=cb1_3u0c_1_039ef37ceffae3a2c3aced0b', {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 19
-        }).addTo(map);
-
         markersLayer = L.layerGroup().addTo(map);
+        adminPolygonsLayer = L.layerGroup().addTo(map);
         
-        const datasetSelect = document.getElementById('datasetSelect');
-        datasetSelect.disabled = true;
-        datasetSelect.className = "bg-slate-900 text-slate-500 border border-slate-700/50 rounded-lg px-2 py-1.5 text-xs font-medium cursor-not-allowed opacity-60 shadow-inner";
+        map.on('click', (e) => {
+          if (isAdminActive) {
+            document.getElementById('adminCoordsText').innerText = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+            const addLat = document.getElementById('addLat');
+            const addLng = document.getElementById('addLng');
+            if (addLat && addLng) {
+              addLat.value = e.latlng.lat.toFixed(4);
+              addLng.value = e.latlng.lng.toFixed(4);
+            }
+          }
+        });
 
         loadSelectedDataset();
+      }
+
+      // MODO ADMIN: VERIFICACIÓN DE CONTRASEÑA 221212
+      function openAdminAuthModal() {
+        if (isAdminActive) {
+          document.getElementById('adminPanelModal').style.display = 'flex';
+        } else {
+          document.getElementById('adminPasswordInput').value = '';
+          document.getElementById('adminAuthError').classList.add('hidden');
+          document.getElementById('adminAuthModal').style.display = 'flex';
+        }
+      }
+
+      function verifyAdminPassword() {
+        const pass = document.getElementById('adminPasswordInput').value.trim();
+        if (pass === "221212") {
+          isAdminActive = true;
+          closeModals();
+          document.getElementById('adminBadge').classList.remove('hidden');
+          document.getElementById('adminCoordsWidget').classList.remove('hidden');
+          document.getElementById('adminPanelModal').style.display = 'flex';
+          showToast('🔑 Modo Admin Activado con Éxito', 'correct');
+        } else {
+          document.getElementById('adminAuthError').classList.remove('hidden');
+          playAudio('wrong');
+        }
+      }
+
+      function switchAdminTab(tabId) {
+        document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.remove('hidden');
+        if (tabId === 'tabVisual') document.getElementById('btnTabVisual').classList.add('active');
+        if (tabId === 'tabAdd') document.getElementById('btnTabAdd').classList.add('active');
+        if (tabId === 'tabCheats') document.getElementById('btnTabCheats').classList.add('active');
+        if (tabId === 'tabData') document.getElementById('btnTabData').classList.add('active');
+      }
+
+      function toggleAdminPolygons(enable) {
+        showAdminPolygons = enable;
+        adminPolygonsLayer.clearLayers();
+
+        if (showAdminPolygons) {
+          const items = getActiveItems();
+          items.forEach(item => {
+            if (item.polygon && item.polygon.length >= 3) {
+              L.polygon(item.polygon, {
+                color: '#f43f5e',
+                fillColor: '#fb7185',
+                fillOpacity: 0.35,
+                weight: 2
+              }).bindTooltip(`<b>${item.name}</b> (${item.cat})`).addTo(adminPolygonsLayer);
+            }
+          });
+          showToast('👁️ Polígonos de Detección Visibles', 'correct');
+        } else {
+          showToast('🙈 Polígonos Ocultados', 'correct');
+        }
+      }
+
+      function addCustomItemFromAdmin() {
+        const name = document.getElementById('addName').value.trim();
+        const cat = document.getElementById('addCat').value.trim() || "Personalizado";
+        const dsKey = document.getElementById('addDataset').value;
+        const lat = parseFloat(document.getElementById('addLat').value);
+        const lng = parseFloat(document.getElementById('addLng').value);
+
+        if (!name || isNaN(lat) || isNaN(lng)) {
+          alert('Por favor introduce un Nombre, Latitud y Longitud válidos.');
+          return;
+        }
+
+        DATASETS[dsKey].items.push({ name, cat, lat, lng });
+        alert(`¡Añadido "${name}" con éxito a ${DATASETS[dsKey].title}!`);
+        populateCategories();
+        if (currentMode === 'study') renderStudyList();
+      }
+
+      function adminAddGeoGuessrPoints(pts) {
+        ggScore += pts;
+        document.getElementById('ggScore').innerText = ggScore;
+        showToast(`⚡ +${pts} Pts añadidos a GeoGuessr`, 'correct');
+      }
+
+      function adminAddGeoGuessrStreak(stk) {
+        ggStreak += stk;
+        document.getElementById('ggStreak').innerText = ggStreak;
+        showToast(`🔥 +${stk} Racha añadida`, 'correct');
+      }
+
+      function adminAddPracticePoints(pts) {
+        practiceScore += pts;
+        document.getElementById('practiceScore').innerText = practiceScore;
+        showToast(`🎯 +${pts} Pts Práctica añadidos`, 'correct');
+      }
+
+      function exportDatasetJSON() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DATASETS, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "geografia_dataset.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
       }
 
       function getActiveItems() {
@@ -782,6 +1266,16 @@
         currentDatasetKey = document.getElementById('datasetSelect').value;
         const ds = DATASETS[currentDatasetKey];
         
+        if (baseTileLayer) {
+          map.removeLayer(baseTileLayer);
+        }
+        const tileConfig = TILE_LAYERS[currentDatasetKey] || TILE_LAYERS.world_phys;
+        baseTileLayer = L.tileLayer(tileConfig.url, {
+          attribution: tileConfig.attribution,
+          subdomains: tileConfig.subdomains || 'abcd',
+          maxZoom: 19
+        }).addTo(map);
+
         map.setView(ds.center, ds.zoom);
         populateCategories();
         
@@ -843,6 +1337,8 @@
           map.off('click', onGeoGuessrMapClick);
           startQuizMode();
         }
+
+        if (showAdminPolygons) toggleAdminPolygons(true);
       }
 
       function populateCategories() {
@@ -868,6 +1364,7 @@
         items.forEach(item => {
           if ((catFilter === 'ALL' || item.cat === catFilter) && item.name.toLowerCase().includes(searchQuery)) {
             count++;
+            
             const marker = L.circleMarker([item.lat, item.lng], {
               radius: item.cat.includes('Ciudad') || item.cat === 'Picos' ? 6 : 8,
               color: '#0ea5e9',
@@ -908,22 +1405,49 @@
           document.getElementById('practiceScore').innerText = 0;
           document.getElementById('practiceQuestionBox').innerHTML = `
             <p class="text-xs font-semibold text-sky-400 mb-1 flex items-center justify-between">
-              <span>¿DÓNDE SE ENCUENTRA?</span>
-              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300">Categoría</span>
+              <span id="practiceQuestionHeader">¿DÓNDE SE ENCUENTRA?</span>
+              <span id="practiceCategoryBadge" class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">Categoría</span>
             </p>
             <h2 id="practiceTargetName" class="text-lg font-extrabold text-white mb-3">Cargando...</h2>
-            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el círculo correcto en el mapa.</p>
+            <p class="text-xs text-slate-400 mb-3">Haz clic sobre el punto correcto en el mapa.</p>
             <button onclick="finishPractice()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 shadow">
               <i class="fa-solid fa-flag-checkered"></i> Terminar Práctica y Ver Media
             </button>
           `;
         } else if (currentMode === 'class') {
-          quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, 5);
+          quizQuestions = selectWeightedQuestions(items, 5);
         } else if (currentMode === 'exam') {
-          quizQuestions = [...items].sort(() => 0.5 - Math.random()).slice(0, Math.min(30, items.length));
+          quizQuestions = selectWeightedQuestions(items, Math.min(30, items.length));
         }
 
         nextQuestion();
+      }
+
+      function updateQuestionUI(item, mode) {
+        if (!item) return;
+        let catText = item.cat ? item.cat.toUpperCase() : '';
+        if (mode === 'practice') {
+          document.getElementById('practiceQuestionHeader').innerText = `UBICA (${catText}):`;
+          document.getElementById('practiceTargetName').innerText = item.name;
+          document.getElementById('practiceCategoryBadge').innerText = item.cat;
+        } else if (mode === 'class') {
+          document.getElementById('classQuestionHeader').innerText = `UBICA (${catText}):`;
+          document.getElementById('classTargetName').innerText = item.name;
+          document.getElementById('classCategoryBadge').innerText = item.cat;
+          document.getElementById('classProgress').innerText = `Pregunta ${quizIndex + 1} de 5`;
+        } else if (mode === 'exam') {
+          document.getElementById('examQuestionHeader').innerText = `UBICA (${catText}):`;
+          document.getElementById('examTargetName').innerText = item.name;
+          document.getElementById('examCategoryBadge').innerText = item.cat;
+          document.getElementById('examProgress').innerText = `Pregunta ${quizIndex + 1} de ${quizQuestions.length}`;
+        } else if (mode === 'geoguesser') {
+          const qHeader = document.getElementById('ggQuestionHeader');
+          const tName = document.getElementById('ggTargetName');
+          const cBadge = document.getElementById('ggCategoryBadge');
+          if (qHeader) qHeader.innerText = `UBICA EN EL MAPA (${catText}):`;
+          if (tName) tName.innerText = item.name;
+          if (cBadge) cBadge.innerText = item.cat;
+        }
       }
 
       function nextQuestion() {
@@ -931,11 +1455,8 @@
         const items = getActiveItems();
 
         if (currentMode === 'practice') {
-          currentQuestionItem = items[Math.floor(Math.random() * items.length)];
-          const targetEl = document.getElementById('practiceTargetName');
-          const badgeEl = document.getElementById('practiceCategoryBadge');
-          if (targetEl) targetEl.innerText = currentQuestionItem.name;
-          if (badgeEl) badgeEl.innerText = currentQuestionItem.cat;
+          currentQuestionItem = getRandomWeightedItem(items);
+          updateQuestionUI(currentQuestionItem, 'practice');
         } else if (currentMode === 'class') {
           if (quizIndex >= quizQuestions.length) {
             const mediaNota = ((quizHits / 5) * 10).toFixed(1);
@@ -956,9 +1477,7 @@
             return;
           }
           currentQuestionItem = quizQuestions[quizIndex];
-          document.getElementById('classTargetName').innerText = currentQuestionItem.name;
-          document.getElementById('classCategoryBadge').innerText = currentQuestionItem.cat;
-          document.getElementById('classProgress').innerText = `Pregunta ${quizIndex + 1} de 5`;
+          updateQuestionUI(currentQuestionItem, 'class');
         } else if (currentMode === 'exam') {
           if (quizIndex >= quizQuestions.length) {
             const total = quizQuestions.length;
@@ -980,9 +1499,7 @@
             return;
           }
           currentQuestionItem = quizQuestions[quizIndex];
-          document.getElementById('examTargetName').innerText = currentQuestionItem.name;
-          document.getElementById('examCategoryBadge').innerText = currentQuestionItem.cat;
-          document.getElementById('examProgress').innerText = `Pregunta ${quizIndex + 1} de ${quizQuestions.length}`;
+          updateQuestionUI(currentQuestionItem, 'exam');
         }
 
         items.forEach(item => {
@@ -1057,33 +1574,19 @@
         markersLayer.clearLayers();
       }
 
-      // --- MODO GEOGUESSR EXTREMO ---
+      // GEOGUESSR
       function startGeoGuessrMode() {
         ggScore = 0;
         ggStreak = 0;
         ggRound = 0;
         
         const combinedItems = getActiveItems();
-        ggCurrentPool = combinedItems.sort(() => 0.5 - Math.random()).slice(0, 10);
+        ggCurrentPool = selectWeightedQuestions(combinedItems, 10);
         
-        document.getElementById('ggScore').innerText = ggScore;
-        document.getElementById('ggStreak').innerText = ggStreak;
-        
-        document.getElementById('ggQuestionBox').innerHTML = `
-          <p class="text-xs font-semibold text-amber-400 mb-1 flex items-center justify-between">
-            <span>UBICA EXACTAMENTE:</span>
-            <span id="ggRoundBadge" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300">Ronda 1/10</span>
-          </p>
-          <h2 id="ggTargetName" class="text-lg font-extrabold text-white mb-2">Cargando...</h2>
-          <p class="text-xs text-slate-300 mb-3">Toca el mapa para marcar y pulsa confirmar.</p>
-          <div id="ggResultFeedback" class="hidden text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-700 mb-3 text-center"></div>
-          <button id="ggConfirmBtn" onclick="confirmGeoGuessrSelection()" disabled class="w-full bg-slate-700 text-slate-400 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed">
-            Confirmar Ubicación 🎯
-          </button>
-          <button id="ggNextBtn" onclick="nextGeoGuessrRound()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 rounded-lg text-xs transition shadow flex items-center justify-center gap-1.5">
-            Siguiente Ronda <i class="fa-solid fa-arrow-right"></i>
-          </button>
-        `;
+        const scoreEl = document.getElementById('ggScore');
+        const streakEl = document.getElementById('ggStreak');
+        if (scoreEl) scoreEl.innerText = ggScore;
+        if (streakEl) streakEl.innerText = ggStreak;
 
         map.off('click', onGeoGuessrMapClick);
         map.on('click', onGeoGuessrMapClick);
@@ -1113,46 +1616,69 @@
         }
       }
 
-      function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-        const R = 6371; 
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = 
-          Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-          Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+      function calculateDistanceAndInside(clickLatLng, targetItem) {
+        const clickPt = turf.point([clickLatLng.lng, clickLatLng.lat]);
+
+        if (targetItem.polygon && targetItem.polygon.length >= 3) {
+          const coords = targetItem.polygon.map(p => [p[1], p[0]]);
+          const first = coords[0];
+          const last = coords[coords.length - 1];
+          if (first[0] !== last[0] || first[1] !== last[1]) {
+            coords.push([first[0], first[1]]);
+          }
+          const poly = turf.polygon([coords]);
+
+          const isInside = turf.booleanPointInPolygon(clickPt, poly);
+          if (isInside) {
+            return { distanceKm: 0, isInside: true };
+          }
+
+          const line = turf.polygonToLine(poly);
+          let distKm = 0;
+          if (line.type === 'FeatureCollection') {
+            const distances = line.features.map(f => {
+              const nearest = turf.nearestPointOnLine(f, clickPt);
+              return turf.distance(clickPt, nearest, { units: 'kilometers' });
+            });
+            distKm = Math.min(...distances);
+          } else {
+            const nearest = turf.nearestPointOnLine(line, clickPt);
+            distKm = turf.distance(clickPt, nearest, { units: 'kilometers' });
+          }
+          return { distanceKm: distKm, isInside: false };
+
+        } else {
+          const targetPt = turf.point([targetItem.lng, targetItem.lat]);
+          const distKm = turf.distance(clickPt, targetPt, { units: 'kilometers' });
+          return { distanceKm: distKm, isInside: false };
+        }
       }
 
       function confirmGeoGuessrSelection() {
         if (!ggSelectedLatLng || ggWaitingForNext) return;
         ggWaitingForNext = true;
 
-        const clickLat = ggSelectedLatLng.lat;
-        const clickLng = ggSelectedLatLng.lng;
-        const targetLat = currentQuestionItem.lat;
-        const targetLng = currentQuestionItem.lng;
-
-        const distanceKm = calculateDistanceKm(clickLat, clickLng, targetLat, targetLng);
+        const evalResult = calculateDistanceAndInside(ggSelectedLatLng, currentQuestionItem);
+        const distanceKm = evalResult.distanceKm;
+        const isInside = evalResult.isInside;
 
         let roundPoints = 0;
         let isFiveK = false;
 
-        if (distanceKm < 7.5) {
+        if (isInside || distanceKm < 15.0) {
           roundPoints = 500;
           ggStreak++;
           isFiveK = true;
           playAudio('correct');
-        } else if (distanceKm < 150) {
+        } else if (distanceKm < 200) {
           roundPoints = 500;
           ggStreak++;
           playAudio('correct');
-        } else if (distanceKm < 500) {
+        } else if (distanceKm < 600) {
           roundPoints = 250;
           ggStreak++;
           playAudio('correct');
-        } else if (distanceKm < 1200) {
+        } else if (distanceKm < 1400) {
           roundPoints = 100;
           ggStreak++;
           playAudio('correct');
@@ -1166,8 +1692,10 @@
         const totalRoundScore = roundPoints + streakBonus;
         ggScore += totalRoundScore;
 
-        document.getElementById('ggScore').innerText = ggScore;
-        document.getElementById('ggStreak').innerText = ggStreak;
+        const scoreEl = document.getElementById('ggScore');
+        const streakEl = document.getElementById('ggStreak');
+        if (scoreEl) scoreEl.innerText = ggScore;
+        if (streakEl) streakEl.innerText = ggStreak;
 
         const confirmBtn = document.getElementById('ggConfirmBtn');
         if (confirmBtn) {
@@ -1175,24 +1703,40 @@
           confirmBtn.className = "hidden w-full bg-slate-700 text-slate-500 font-semibold py-2 rounded-lg text-xs transition shadow mb-2 cursor-not-allowed";
         }
 
-        const targetMarker = L.circleMarker([targetLat, targetLng], { radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.9 }).addTo(markersLayer);
-        targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Real)`).openPopup();
+        const targetMarker = L.circleMarker([currentQuestionItem.lat, currentQuestionItem.lng], {
+          radius: 8,
+          color: '#10b981',
+          fillColor: '#34d399',
+          fillOpacity: 0.9
+        }).addTo(markersLayer);
 
-        ggLineLayer = L.polyline([[clickLat, clickLng], [targetLat, targetLng]], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).addTo(map);
+        targetMarker.bindPopup(`<b>${currentQuestionItem.name}</b> (Ubicación Correcta)`).openPopup();
+
+        ggLineLayer = L.polyline([[ggSelectedLatLng.lat, ggSelectedLatLng.lng], [currentQuestionItem.lat, currentQuestionItem.lng]], {
+          color: '#f59e0b',
+          weight: 3,
+          dashArray: '5, 5'
+        }).addTo(map);
 
         const feedbackDiv = document.getElementById('ggResultFeedback');
-        let html = `📍 Error: <b>${Math.round(distanceKm)} km</b><br>`;
+        let html = isInside 
+          ? `🎯 <b>¡DENTRO DEL ÁREA O MASA DE AGUA! (0 km de error)</b><br>` 
+          : `📍 Error: <b>${Math.round(distanceKm)} km</b><br>`;
         
         if (isFiveK) {
           html += `<div class="my-2 p-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-black rounded-xl font-black text-xl tracking-wider anim-5k shadow-2xl border-2 border-white flex items-center justify-center gap-2">
-            <span>👑 5K</span> <span class="text-xs uppercase bg-black text-amber-300 px-2 py-0.5 rounded-full">¡Perfecto!</span>
+            <span>👑 5K PERFECTO</span> <span class="text-xs uppercase bg-black text-amber-300 px-2 py-0.5 rounded-full">+500 pts</span>
           </div>`;
         }
 
         html += `⭐ Puntos ronda: <b>+${totalRoundScore} pts</b> ${streakBonus > 0 ? `(🔥 +${streakBonus} extra)` : ''}`;
-        feedbackDiv.innerHTML = html;
-        feedbackDiv.classList.remove('hidden');
-        document.getElementById('ggNextBtn').classList.remove('hidden');
+        if (feedbackDiv) {
+          feedbackDiv.innerHTML = html;
+          feedbackDiv.classList.remove('hidden');
+        }
+        
+        const nextBtn = document.getElementById('ggNextBtn');
+        if (nextBtn) nextBtn.classList.remove('hidden');
       }
 
       function nextGeoGuessrRound() {
@@ -1228,10 +1772,18 @@
         ggRound++;
         ggWaitingForNext = false;
 
-        document.getElementById('ggRoundBadge').innerText = `Ronda ${ggRound}/${ggCurrentPool.length}`;
-        document.getElementById('ggTargetName').innerText = currentQuestionItem.name;
-        document.getElementById('ggResultFeedback').classList.add('hidden');
-        document.getElementById('ggNextBtn').classList.add('hidden');
+        const roundBadge = document.getElementById('ggRoundBadge');
+        if (roundBadge) {
+          roundBadge.innerText = `Ronda ${ggRound}/${ggCurrentPool.length}`;
+        }
+
+        updateQuestionUI(currentQuestionItem, 'geoguesser');
+
+        const feedbackDiv = document.getElementById('ggResultFeedback');
+        if (feedbackDiv) feedbackDiv.classList.add('hidden');
+
+        const nextBtn = document.getElementById('ggNextBtn');
+        if (nextBtn) nextBtn.classList.add('hidden');
         
         const confirmBtn = document.getElementById('ggConfirmBtn');
         if (confirmBtn) {
@@ -1241,7 +1793,6 @@
         }
       }
 
-      // --- MODALES Y TIER LIST GLOBAL ---
       function getTierByScore(score, mode) {
         if (mode === 'practice') {
           if (score >= 1500) return 'tierS';
@@ -1295,6 +1846,8 @@
       function closeModals() {
         document.getElementById('saveScoreModal').style.display = 'none';
         document.getElementById('tierListModal').style.display = 'none';
+        document.getElementById('adminAuthModal').style.display = 'none';
+        document.getElementById('adminPanelModal').style.display = 'none';
       }
 
       async function submitScoreToCloud() {
