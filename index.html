@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examen Geografía - Modo Admin & Tier List</title>
+    <title>Examen Geografía</title>
     
     <!-- Icono de bola del mundo -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
@@ -378,7 +378,7 @@
 
         <!-- Pestañas Admin -->
         <div class="flex gap-2 border-b border-slate-700 pb-2 mb-4 overflow-x-auto">
-          <button onclick="switchAdminTab('tabVisual')" id="btnTabVisual" class="admin-tab-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">👁️ Modo Dios (Polígonos)</button>
+          <button onclick="switchAdminTab('tabVisual')" id="btnTabVisual" class="admin-tab-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">👁️️ Modo Dios (Polígonos)</button>
           <button onclick="switchAdminTab('tabAdd')" id="btnTabAdd" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">➕ Añadir Elemento</button>
           <button onclick="switchAdminTab('tabCheats')" id="btnTabCheats" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">⚡ Cheats & Puntos</button>
           <button onclick="switchAdminTab('tabData')" id="btnTabData" class="admin-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300">💾 Import/Export JSON</button>
@@ -527,16 +527,15 @@
     <script>
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzumjuZoWeWJbRnyY04t2ClhpprsQnzkH7f3hk1YZLyNVzUkDh7VU69i0p5vfZw_T25vg/exec";
 
-      // MAPAS DE FONDO CON CLAVE CARTO VOYAGER PARA EL POLÍTICO
+      // AMBOS MODOS USAN EL MISMO MAPA FÍSICO DE ESRI
       const TILE_LAYERS = {
         world_phys: {
           url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
           attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics'
         },
         world_pol: {
-          url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_3u0c_1_039ef37ceffae3a2c3aced0b',
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          subdomains: 'abcd'
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics'
         }
       };
 
@@ -1145,7 +1144,7 @@
         loadSelectedDataset();
       }
 
-      // MODO ADMIN: VERIFICACIÓN DE CONTRASEÑA 221212
+      // MODO ADMIN: VERIFICACIÓN DE CONTRASEÑA 2105
       function openAdminAuthModal() {
         if (isAdminActive) {
           document.getElementById('adminPanelModal').style.display = 'flex';
@@ -1158,7 +1157,7 @@
 
       function verifyAdminPassword() {
         const pass = document.getElementById('adminPasswordInput').value.trim();
-        if (pass === "221212") {
+        if (pass === "2105") {
           isAdminActive = true;
           closeModals();
           document.getElementById('adminBadge').classList.remove('hidden');
